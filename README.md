@@ -1,2 +1,8 @@
 # circRNA_simu
-Simulate PE RNA-Seq data containing circRNAs derived from glioblastoma samples. 
+To reproduce the simulated dataset, run:
+
+```console
+bash gen_pos.sh
+```
+
+Requires stable internet connection for `wget`. 
