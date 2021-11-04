@@ -1,0 +1,571 @@
+---
+title: "circ_paper_results"
+author: "Barry"
+date: "9/29/2021"
+output: html_document
+---
+
+# Read in bed files 
+
+```{R}
+
+glio <- read.table("/data/projects/paper_results/pos_results/glioblastoma.bed", header=F, sep="\t")
+colnames(glio) <- c("chr", "start", "end")
+
+circexp <- read.table("/data/projects/paper_results/pos_results/pos_circexplorer2.bed", header=F, sep="\t")
+colnames(circexp) <- c("chr", "start", "end", "strand", "count")
+
+ciri <- read.table("/data/projects/paper_results/pos_results/pos_ciriquant.bed", header=F, sep="\t")
+colnames(ciri) <- c("chr", "start", "end", "strand", "count")
+
+circrna_finder <- read.table("/data/projects/paper_results/pos_results/pos_circrna_finder.bed", header=F, sep="\t")
+colnames(circrna_finder) <- c("chr", "start", "end", "strand", "count")
+
+dcc <- read.table("/data/projects/paper_results/pos_results/pos_dcc.bed", header=F, sep="\t")
+colnames(dcc) <- c("chr", "start", "end", "strand", "count")
+
+find_circ <- read.table("/data/projects/paper_results/pos_results/pos_find_circ.bed", header=F, sep="\t")
+colnames(find_circ) <- c("chr", "start", "end", "strand", "count")
+
+mapsplice <- read.table("/data/projects/paper_results/pos_results/pos_mapsplice.bed", header=F, sep="\t")
+colnames(mapsplice) <- c("chr", "start", "end", "strand", "count")
+
+segemehl <- read.table("/data/projects/paper_results/pos_results/pos_segemehl.bed", header=F, sep="\t")
+colnames(segemehl) <- c("chr", "start", "end", "strand", "count")
+
+nf_circ <- read.table("/data/projects/paper_results/pos_results/matrix_no_filt/mat_gen/circRNA_counts.txt", header=T, sep="\t")
+colnames(nf_circ) <- c("chr", "start", "end", "strand", "count")
+```
+
+
+## format coordinates to vectors/factors to compare common circs. 
+
+Remove duplicate entries here - glioblastoma circrnas do not have strand information so cannot tell between false positives and poor experimental design on my behalf. 
+
+```{R}
+glio$vec <- as.factor(paste(glio$chr, glio$start, glio$end, sep="-"))
+
+circexp$vec <- as.factor(paste(circexp$chr, circexp$start, circexp$end, sep="-"))
+circexp <- circexp[!duplicated(circexp$vec),]
+
+ciri$vec <- as.factor(paste(ciri$chr, ciri$start, ciri$end, sep="-"))
+ciri <- ciri[!duplicated(ciri$vec),]
+
+circrna_finder$vec <- as.factor(paste(circrna_finder$chr, circrna_finder$start, circrna_finder$end, sep="-"))
+circrna_finder <- circrna_finder[!duplicated(circrna_finder$vec),]
+
+dcc$vec <- as.factor(paste(dcc$chr, dcc$start, dcc$end, sep="-"))
+dcc <- dcc[!duplicated(dcc$vec),]
+
+find_circ$vec <- as.factor(paste(find_circ$chr, find_circ$start, find_circ$end, sep="-"))
+find_circ <- find_circ[!duplicated(find_circ$vec),]
+
+mapsplice$vec <- as.factor(paste(mapsplice$chr, mapsplice$start, mapsplice$end, sep="-"))
+mapsplice <- mapsplice[!duplicated(mapsplice$vec),]
+
+segemehl$vec <- as.factor(paste(segemehl$chr, segemehl$start, segemehl$end, sep="-"))
+segemehl <- segemehl[!duplicated(segemehl$vec),]
+
+nf_circ$vec <- as.factor(paste(nf_circ$chr, nf_circ$start, nf_circ$end, sep="-"))
+nf_circ <- nf_circ[!duplicated(nf_circ$vec),]
+
+```
+
+## Proportion of candidates detected by 1 tool also detected by every other tool 
+Strategy is to compare two quantification tools $i,j$ as follows: 
+
+* The number of deteced circRNAs is given as $N_i, N_j$ for tool $i,j$ respectively. 
+
+* The common candidates detected by both $i,j$ is $C_(i,j)$. 
+
+* For tool $i$, the proportion of common circRNAs is given as $P_(i,j)=C_(i,j)/N_(i)$.
+
+Function for this is stored under `prop_comm` and deployed in a for loop to calculate $P_(i,j)$ for each tool. Once results for a tool has been stored in a vector, populate the output dataframe and move to the next tool. Present the results as a heatmap for easy interpretation. 
+
+```{R}
+## throw them in a list to iterate over 
+
+result_list <- list()
+
+result_list$circexp <- circexp$vec
+result_list$ciri <- ciri$vec
+result_list$circrna <- circrna_finder$vec
+result_list$dcc <- dcc$vec
+result_list$find_circ <- find_circ$vec
+result_list$mapsplice <- mapsplice$vec
+result_list$segemehl <- segemehl$vec
+result_list$nf_circ <- nf_circ$vec
+
+## init empty df 
+out_df <- data.frame(matrix(nrow=8,ncol=8))
+
+## function for prop comm circrnas between i,j
+prop_comm <- function(i,j){
+  ## common circs in i,j
+  c_i_j <- sum(i %in% j)
+  ## proportion of circs in i vs j             
+  p_i_j <- c_i_j/length(i)
+  return(p_i_j)
+}
+
+## loop over tool to create vector of results, append to row of df. 
+
+for(it in seq(from=1, to=8, by=1)){
+  i <- it
+  vec <- c()
+  for(id in seq(from=1, to=8, by=1)){
+    j <- id
+    i_v <- result_list[[i]]
+    j_v <- result_list[[j]]
+    p_i_j <- prop_comm(i_v,j_v)
+    vec <- c(vec, p_i_j)
+  }
+  out_df[i,] <- vec
+}
+
+col_row <- c("CIRCexplorer2", "CIRIquant", "circRNA_Finder", "DCC", "find_circ", "MapSplice", "Segemehl", "nf-core/circrna")
+colnames(out_df) <- col_row
+rownames(out_df) <- col_row
+```
+
+## Proportion common heatmap. Work in prog, make more visually appealing. 
+
+```{R, message=F, echo=F}
+library(lattice)
+library(grid)
+library(viridis)
+
+quantile_breaks <- function(xs, n = 7) {
+  breaks <- quantile(xs, probs = seq(0, 1, length.out = n))
+  breaks[!duplicated(breaks)]
+}
+
+out_mat <- as.matrix(out_df)
+
+mat_breaks <- quantile_breaks(out_mat, n = 7)
+
+library(lattice)
+library(grid)
+
+#png("comm_prop_no_filt.png",width = 500, height = 500, pointsize = 14)  
+svg("~/Desktop/comm_prop_no_filt.svg", width=8, height=8)
+levelplot(out_mat, 
+          col.regions = rocket(100, begin = 0, end = 1, alpha = 0.9, direction = 1), 
+          scales=list(x=list(rot=45), cex = 1.5),
+          ylab = "",
+          xlab = "")
+#grid.text("Proportion of common candidates", .86, .6, rot = 270, gp = gpar(fontface = "bold", fontsize=12))
+dev.off()
+```
+## Calculate Accuracy(also given as precision in other paper..), Sensitivity and F1 score for Simulated dataset. 
+Please note that sensitivity IS recall, the authors of the paper bizarrely decide to switch between the two at will. 
+
+```{R}
+
+df <- data.frame(matrix(nrow=8, ncol=1))
+rownames(df) <- col_row
+
+for(i in seq(from=1, to=8, by=1)){
+  
+  a <- c()
+  b <- c()
+  for(z in seq(from=1, to=8, by=1)){
+     detected <- length(result_list[[z]])
+     true_positive <- sum(result_list[[z]] %in% glio$vec)
+     
+     a <- c(a, detected)
+     b <- c(b, true_positive)
+  }
+}
+
+df[,1] <- a
+df[,2] <- b
+
+colnames(df) <- c("#Detected", "True Positive")
+
+df$Precision <- (df$`True Positive`/df$`#Detected`)*100
+
+df$Sensitivity <- (df$`True Positive`)/(df$`True Positive` + (7267 - df$`True Positive`)) * 100
+                           
+df$F1 <- 2*(((df$Precision)*(df$Sensitivity))/((df$Precision) + (df$Sensitivity)))
+
+library(data.table)
+
+DT::datatable(df)
+```
+
+## circos plot for fun because .. looks well. 
+
+#### Unfiltered result first ####
+
+blue pos red false
+
+```{R}
+library(readr)
+library(ggplot2)
+library(circlize)
+library(dplyr)
+library(RColorBrewer)
+options(stringsAsFactors=F)
+args <-commandArgs(T)
+#setwd("./")
+#args[1]<-"/home/wqj/code/circPipe-master/final.matrix"
+#finalmatrix <- as.data.frame(read_delim(args[1],delim = "\t"))
+
+finalmatrix <- read.table("/data/projects/paper_results/pos_results/matrix_no_filt/mat_gen/circRNA_counts.txt", header=T, sep="\t")
+
+id <- paste(finalmatrix$Chr, finalmatrix$Start, finalmatrix$Stop, sep="-")
+
+finalmatrix$id <- id
+
+finalmatrix <- finalmatrix[!duplicated(finalmatrix$id),]
+
+#                                                          blue            red
+finalmatrix$col <- ifelse(finalmatrix$id %in% glio$vec, "#0000FFFF", "#FFFFFFFF")
+
+chr <- finalmatrix$Chr
+start <- finalmatrix$Start
+end <- finalmatrix$Stop
+strand <- finalmatrix$Strand
+counts <- finalmatrix$combined_counts
+
+a <- data.frame(chr = chr, start = as.numeric(start), end = as.numeric(end), value = counts)
+
+#a=filter(a, chr != "chrM")
+chr<-a$chr
+chr<-factor(chr,ordered = TRUE,levels = c("chr1","chr2","chr3","chr4","chr5","chr6","chr7","chr8","chr9","chr10","chr11","chr12","chr13","chr14","chr15","chr16","chr17","chr18","chr19","chr20","chr21","chr22","chrX","chrY"))
+a$chr<-chr
+a<-a[order(a[,1]),]
+a$chr<-as.character(a$chr)
+chr=unique(a$chr)
+a$color <- finalmatrix$col
+
+
+## try splitting. 
+
+b <- subset(a, a$color == "#0000FFFF")
+b<-b[order(b[,1]),]
+b$chr<-as.character(b$chr)
+c <- subset(a, a$color == "#FFFFFFFF")
+c<-c[order(c[,1]),]
+c$chr<-as.character(c$chr)
+
+bed_list <- list(b, c)
+
+
+#png("circos_filt.png",width=1800, height=1800, res = 300)
+#par(mar=c(1,1,1,1))
+#circos.initializeWithIdeogram(species = 'hg19',chromosome.index = chr)
+#circos.genomicTrackPlotRegion(bed_list,panel.fun = function(region, value,...){
+#  i = getI(...)
+#  circos.genomicPoints(region, value, cex = 0.3, pch = i, col=c("#FF000080", "#0000FF80"), ...)})
+#bg.col <- rep(c("#EFEFEF", "#CCCCCC"), 12)
+#circos.trackHist(a$chr, a$start, bg.col = bg.col, col = "blue",bin.size = 3000000)
+#circos.clear()
+#dev.off()
+
+#png("circos_no_filt.png",width=5000, height=5000, res = 1000)
+#svg("~/Desktop/circos_no_filt.svg", width=8, height=8, pointsize = 18)
+par(mar=c(1,1,1,1))
+circos.initializeWithIdeogram(species = 'hg19',chromosome.index = chr)
+circos.genomicRainfall(bed_list, pch=c(20,18), cex=c(0.4,0.5), col=c("#0000FF80", "#FF000080"))
+circos.genomicDensity(b, col = c("#0000FF80"), track.height = 0.1)
+circos.genomicDensity(c, col = c("#FF000080"), track.height = 0.1)
+circos.clear()
+#dev.off()
+```
+
+
+
+
+#################################################################
+
+## CLEAR SESSION - START AGAIN WITH FILTERED NF_CIRCRNA DATAFRAME 
+
+#################################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Read in bed files 
+
+```{R}
+
+glio <- read.table("/data/projects/paper_results/pos_results/glioblastoma.bed", header=F, sep="\t")
+colnames(glio) <- c("chr", "start", "end")
+
+circexp <- read.table("/data/projects/paper_results/pos_results/matrix_filt/bsj_2_beds/pos_circexplorer2.bed", header=F, sep="\t")
+colnames(circexp) <- c("chr", "start", "end", "strand", "count")
+
+ciri <- read.table("/data/projects/paper_results/pos_results/matrix_filt/bsj_2_beds/pos_ciriquant.bed", header=F, sep="\t")
+colnames(ciri) <- c("chr", "start", "end", "strand", "count")
+
+circrna_finder <- read.table("/data/projects/paper_results/pos_results/matrix_filt/bsj_2_beds/pos_circrna_finder.bed", header=F, sep="\t")
+colnames(circrna_finder) <- c("chr", "start", "end", "strand", "count")
+
+dcc <- read.table("/data/projects/paper_results/pos_results/matrix_filt/bsj_2_beds/pos_dcc.bed", header=F, sep="\t")
+colnames(dcc) <- c("chr", "start", "end", "strand", "count")
+
+find_circ <- read.table("/data/projects/paper_results/pos_results/matrix_filt/bsj_2_beds/pos_find_circ.bed", header=F, sep="\t")
+colnames(find_circ) <- c("chr", "start", "end", "strand", "count")
+
+mapsplice <- read.table("/data/projects/paper_results/pos_results/matrix_filt/bsj_2_beds/pos_mapsplice.bed", header=F, sep="\t")
+colnames(mapsplice) <- c("chr", "start", "end", "strand", "count")
+
+segemehl <- read.table("/data/projects/paper_results/pos_results/matrix_filt/bsj_2_beds/pos_segemehl.bed", header=F, sep="\t")
+colnames(segemehl) <- c("chr", "start", "end", "strand", "count")
+
+nf_circ <- read.table("/data/projects/paper_results/pos_results/matrix_filt/mat_comb/circRNA_counts.txt", header=T, sep="\t")
+colnames(nf_circ) <- c("chr", "start", "end", "strand", "count")
+```
+
+
+## format coordinates to vectors/factors to compare common circs. 
+
+Remove duplicate entries here - glioblastoma circrnas do not have strand information so cannot tell between false positives and poor experimental design on my behalf. 
+
+```{R}
+glio$vec <- as.factor(paste(glio$chr, glio$start, glio$end, sep="-"))
+
+circexp$vec <- as.factor(paste(circexp$chr, circexp$start, circexp$end, sep="-"))
+circexp <- circexp[!duplicated(circexp$vec),]
+
+ciri$vec <- as.factor(paste(ciri$chr, ciri$start, ciri$end, sep="-"))
+ciri <- ciri[!duplicated(ciri$vec),]
+
+circrna_finder$vec <- as.factor(paste(circrna_finder$chr, circrna_finder$start, circrna_finder$end, sep="-"))
+circrna_finder <- circrna_finder[!duplicated(circrna_finder$vec),]
+
+dcc$vec <- as.factor(paste(dcc$chr, dcc$start, dcc$end, sep="-"))
+dcc <- dcc[!duplicated(dcc$vec),]
+
+find_circ$vec <- as.factor(paste(find_circ$chr, find_circ$start, find_circ$end, sep="-"))
+find_circ <- find_circ[!duplicated(find_circ$vec),]
+
+mapsplice$vec <- as.factor(paste(mapsplice$chr, mapsplice$start, mapsplice$end, sep="-"))
+mapsplice <- mapsplice[!duplicated(mapsplice$vec),]
+
+segemehl$vec <- as.factor(paste(segemehl$chr, segemehl$start, segemehl$end, sep="-"))
+segemehl <- segemehl[!duplicated(segemehl$vec),]
+
+nf_circ$vec <- as.factor(paste(nf_circ$chr, nf_circ$start, nf_circ$end, sep="-"))
+nf_circ <- nf_circ[!duplicated(nf_circ$vec),]
+
+```
+
+## Proportion of candidates detected by 1 tool also detected by every other tool 
+Strategy is to compare two quantification tools $i,j$ as follows: 
+
+* The number of deteced circRNAs is given as $N_i, N_j$ for tool $i,j$ respectively. 
+
+* The common candidates detected by both $i,j$ is $C_(i,j)$. 
+
+* For tool $i$, the proportion of common circRNAs is given as $P_(i,j)=C_(i,j)/N_(i)$.
+
+Function for this is stored under `prop_comm` and deployed in a for loop to calculate $P_(i,j)$ for each tool. Once results for a tool has been stored in a vector, populate the output dataframe and move to the next tool. Present the results as a heatmap for easy interpretation. 
+
+```{R}
+## throw them in a list to iterate over 
+
+result_list <- list()
+
+result_list$circexp <- circexp$vec
+result_list$ciri <- ciri$vec
+result_list$circrna <- circrna_finder$vec
+result_list$dcc <- dcc$vec
+result_list$find_circ <- find_circ$vec
+result_list$mapsplice <- mapsplice$vec
+result_list$segemehl <- segemehl$vec
+result_list$nf_circ <- nf_circ$vec
+
+## init empty df 
+out_df <- data.frame(matrix(nrow=8,ncol=8))
+
+## function for prop comm circrnas between i,j
+prop_comm <- function(i,j){
+  ## common circs in i,j
+  c_i_j <- sum(i %in% j)
+  ## proportion of circs in i vs j             
+  p_i_j <- c_i_j/length(i)
+  return(p_i_j)
+}
+
+## loop over tool to create vector of results, append to row of df. 
+
+for(it in seq(from=1, to=8, by=1)){
+  i <- it
+  vec <- c()
+  for(id in seq(from=1, to=8, by=1)){
+    j <- id
+    i_v <- result_list[[i]]
+    j_v <- result_list[[j]]
+    p_i_j <- prop_comm(i_v,j_v)
+    vec <- c(vec, p_i_j)
+  }
+  out_df[i,] <- vec
+}
+
+col_row <- c("CIRCexplorer2", "CIRIquant", "circRNA_Finder", "DCC", "find_circ", "MapSplice", "Segemehl", "nf-core/circrna")
+colnames(out_df) <- col_row
+rownames(out_df) <- col_row
+```
+
+## Proportion common heatmap. Work in prog, make more visually appealing. 
+
+```{R, message=F, echo=F}
+library(lattice)
+library(grid)
+library(viridis)
+
+quantile_breaks <- function(xs, n = 7) {
+  breaks <- quantile(xs, probs = seq(0, 1, length.out = n))
+  breaks[!duplicated(breaks)]
+}
+
+out_mat <- as.matrix(out_df)
+
+mat_breaks <- quantile_breaks(out_mat, n = 7)
+
+library(lattice)
+library(grid)
+
+#png("comm_prop_filt.png",width = 500, height = 500, pointsize = 14)  
+svg("~/Desktop/comm_prop_filt.svg", width=8, height=8)
+levelplot(out_mat, 
+          col.regions = rocket(100, begin = 0, end = 1, alpha = 0.9, direction = 1), 
+          scales=list(x=list(rot=45), cex = 1.5),
+          ylab = "",
+          xlab = "")
+#grid.text("Proportion of common candidates", .86, .6, rot = 270, gp = gpar(fontface = "bold", fontsize=12))
+dev.off()
+```
+## Calculate Accuracy(also given as precision in other paper..), Sensitivity and F1 score for Simulated dataset. 
+Please note that sensitivity IS recall, the authors of the paper bizarrely decide to switch between the two at will. 
+
+```{R}
+
+df <- data.frame(matrix(nrow=8, ncol=1))
+rownames(df) <- col_row
+
+for(i in seq(from=1, to=8, by=1)){
+  
+  a <- c()
+  b <- c()
+  for(z in seq(from=1, to=8, by=1)){
+     detected <- length(result_list[[z]])
+     true_positive <- sum(result_list[[z]] %in% glio$vec)
+     
+     a <- c(a, detected)
+     b <- c(b, true_positive)
+  }
+}
+
+df[,1] <- a
+df[,2] <- b
+
+colnames(df) <- c("#Detected", "True Positive")
+
+df$Precision <- (df$`True Positive`/df$`#Detected`)*100
+
+df$Sensitivity <- (df$`True Positive`)/(df$`True Positive` + (7267 - df$`True Positive`)) * 100
+                           
+df$F1 <- 2*(((df$Precision)*(df$Sensitivity))/((df$Precision) + (df$Sensitivity)))
+
+library(dplyr)
+
+df %>% mutate_at(vars(Precision, Sensitivity, F1), funs(round(., 1)))
+
+library(data.table)
+
+DT::datatable(df)
+```
+
+## circos plot for fun because .. looks well. 
+
+#### Unfiltered result first ####
+
+blue pos red false
+
+```{R}
+library(readr)
+library(ggplot2)
+library(circlize)
+library(dplyr)
+library(RColorBrewer)
+options(stringsAsFactors=F)
+args <-commandArgs(T)
+#setwd("./")
+#args[1]<-"/home/wqj/code/circPipe-master/final.matrix"
+#finalmatrix <- as.data.frame(read_delim(args[1],delim = "\t"))
+
+finalmatrix <- read.table("/data/projects/paper_results/pos_results/matrix_filt/mat_comb/circRNA_counts.txt", header=T, sep="\t")
+
+id <- paste(finalmatrix$Chr, finalmatrix$Start, finalmatrix$Stop, sep="-")
+
+finalmatrix$id <- id
+
+finalmatrix <- finalmatrix[!duplicated(finalmatrix$id),]
+
+#                                                          blue            red
+finalmatrix$col <- ifelse(finalmatrix$id %in% glio$vec, "#0000FFFF", "#FFFFFFFF")
+
+chr <- finalmatrix$Chr
+start <- finalmatrix$Start
+end <- finalmatrix$Stop
+strand <- finalmatrix$Strand
+counts <- finalmatrix$combined_counts
+
+a <- data.frame(chr = chr, start = as.numeric(start), end = as.numeric(end), value = counts)
+
+#a=filter(a, chr != "chrM")
+chr<-a$chr
+chr<-factor(chr,ordered = TRUE,levels = c("chr1","chr2","chr3","chr4","chr5","chr6","chr7","chr8","chr9","chr10","chr11","chr12","chr13","chr14","chr15","chr16","chr17","chr18","chr19","chr20","chr21","chr22","chrX","chrY"))
+a$chr<-chr
+a<-a[order(a[,1]),]
+a$chr<-as.character(a$chr)
+chr=unique(a$chr)
+a$color <- finalmatrix$col
+
+
+## try splitting. 
+
+b <- subset(a, a$color == "#0000FFFF")
+b<-b[order(b[,1]),]
+b$chr<-as.character(b$chr)
+c <- subset(a, a$color == "#FFFFFFFF")
+c<-c[order(c[,1]),]
+c$chr<-as.character(c$chr)
+
+bed_list <- list(b, c)
+
+
+#png("circos_filt.png",width=1800, height=1800, res = 300)
+#par(mar=c(1,1,1,1))
+#circos.initializeWithIdeogram(species = 'hg19',chromosome.index = chr)
+#circos.genomicTrackPlotRegion(bed_list,panel.fun = function(region, value,...){
+#  i = getI(...)
+#  circos.genomicPoints(region, value, cex = 0.3, pch = i, col=c("#FF000080", "#0000FF80"), ...)})
+#bg.col <- rep(c("#EFEFEF", "#CCCCCC"), 12)
+#circos.trackHist(a$chr, a$start, bg.col = bg.col, col = "blue",bin.size = 3000000)
+#circos.clear()
+#dev.off()
+
+#png("circos_filt.png",width=5000, height=5000, res = 1000)
+svg("~/Desktop/circos_filt.svg", width=8, height=8, pointsize = 18)
+par(mar=c(1,1,1,1))
+circos.initializeWithIdeogram(species = 'hg19',chromosome.index = chr)
+circos.genomicRainfall(bed_list, pch=c(20,18), cex=c(0.4,0.5), col=c("#0000FF80", "#FF000080"))
+circos.genomicDensity(b, col = c("#0000FF80"), track.height = 0.1)
+circos.genomicDensity(c, col = c("#FF000080"), track.height = 0.1)
+circos.clear()
+dev.off()
+```
