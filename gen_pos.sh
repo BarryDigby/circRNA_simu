@@ -50,13 +50,13 @@ mv hg19* ucsc/
 mkdir -p reads
 mkdir -p logs
 
-perl ./CIRIsimulator.pl -1 reads/glio_1.fastq -2 reads/glio_2.fastq -O logs/glio_circRNA.list -G ./hg19.gtf -DB truth_sets/glioblastoma.txt -C 10 -LC 0 -R 1 -LR 1 -L 101 -E 1 -I 350 -D ./ucsc -CHR1 0 -M 50 2>&1 | tee logs/glio.out && \
+perl ./CIRIsimulator.pl -1 reads/glio_1.fastq -2 reads/glio_2.fastq -O logs/glio_circRNA.list -G ucsc/hg19.gtf -DB truth_sets/glioblastoma.txt -C 10 -LC 0 -R 1 -LR 1 -L 101 -E 1 -I 350 -D ./ucsc -CHR1 0 -M 50 2>&1 | tee logs/glio.out && \
 gzip reads/glio_1.fastq reads/glio_2.fastq
 
-perl ./CIRIsimulator.pl -1 reads/oligo_1.fastq -2 reads/oligo_2.fastq -O logs/oligo_circRNA.list -G ./hg19.gtf -DB truth_sets/oligodendroma.txt -C 10 -LC 0 -R 1 -LR 1 -L 101 -E 1 -I 350 -D ./ucsc -CHR1 0 -M 50 2>&1 | tee logs/oligo.out && \
+perl ./CIRIsimulator.pl -1 reads/oligo_1.fastq -2 reads/oligo_2.fastq -O logs/oligo_circRNA.list -G ucsc/hg19.gtf -DB truth_sets/oligodendroma.txt -C 10 -LC 0 -R 1 -LR 1 -L 101 -E 1 -I 350 -D ./ucsc -CHR1 0 -M 50 2>&1 | tee logs/oligo.out && \
 gzip reads/oligo_1.fastq reads/oligo_2.fastq
 
-perl ./CIRIsimulator.pl -1 reads/leuk_1.fastq -2 reads/leuk_2.fastq -O logs/leuk_circRNA.list -G ./hg19.gtf -DB truth_sets/leukemia.txt -C 10 -LC 0 -R 1 -LR 1 -L 101 -E 1 -I 350 -D ./ucsc -CHR1 0 -M 50 2>&1 | tee logs/leuk.out && \
+perl ./CIRIsimulator.pl -1 reads/leuk_1.fastq -2 reads/leuk_2.fastq -O logs/leuk_circRNA.list -G ucsc/hg19.gtf -DB truth_sets/leukemia.txt -C 10 -LC 0 -R 1 -LR 1 -L 101 -E 1 -I 350 -D ./ucsc -CHR1 0 -M 50 2>&1 | tee logs/leuk.out && \
 gzip reads/leuk_1.fastq reads/leuk_2.fastq
 
 ## 5. Run Workflow
