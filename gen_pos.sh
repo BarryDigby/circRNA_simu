@@ -64,7 +64,7 @@ gzip reads/leuk_1.fastq reads/leuk_2.fastq
 
 ## 5. Run Workflow
 
-nextflow -bg run -r dev nf-core/circrna -profile singularity,lugh --input "reads/*_{1,2}.fastq.gz" --input_type "fastq" --module "circrna_discovery" --tool "circexplorer2, ciriquant, circrna_finder, dcc, find_circ, mapsplice, segemehl" --bsj_reads 0 --tool_filter 0 --outdir "simulated_analysis" --fasta "hg19.fa" --gtf "hg19.gtf" --circexplorer2_annotation "hg19.txt" --max_cpus 16 --max_memory '100.GB'
+nextflow -bg run -r dev nf-core/circrna -profile singularity,lugh --input "reads/*_{1,2}.fastq.gz" --input_type "fastq" --module "circrna_discovery" --tool "circexplorer2, ciriquant, circrna_finder, dcc, find_circ, mapsplice, segemehl" --bsj_reads 0 --tool_filter 0 --outdir "simulated_analysis" --fasta "ucsc/hg19.fa" --gtf "hg19.gtf" --circexplorer2_annotation "hg19.txt" --max_cpus 4 --max_memory '50.GB'
 
 ## note: you will have to extract each cancer type from the results and check against the truth sets (i.e dont count a circRNA exclusive to glioblastoma as a missed call for the other 2). 
 ## Generate coordinates from the truth sets and use these as members of a set for analysis in R. 
