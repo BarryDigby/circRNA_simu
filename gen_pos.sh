@@ -41,7 +41,7 @@ rm ucsc/hg19.fa
 
 while read -r line; do rm -f ucsc/${line}.fa; done < non_canon_chrs.txt
 
-cat ucsc/*.fa > hg19.fa
+cat ucsc/*.fa > ucsc/hg19.fa
 
 ## 4. Generate Sim reads 
 
