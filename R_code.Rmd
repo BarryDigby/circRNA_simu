@@ -1,39 +1,42 @@
 ---
-title: "circ_paper_results"
+title: "circ_circ_paper_results"
 author: "Barry"
 date: "9/29/2021"
 output: html_document
 ---
 
 # Read in bed files 
+## simu data no filt
 
+
+`awk -F'\t' 'NF==5' circRNA_matrix.txt | sed '/cox/d' | sed '/chrM/d' | sed 'chrUn/d' > mat.txt` 
 ```{R}
 
-glio <- read.table("/data/projects/paper_results/pos_results/glioblastoma.bed", header=F, sep="\t")
+glio <- read.table("/data/projects/circ_paper_results/sim_data/glioblastoma.bed", header=F, sep="\t")
 colnames(glio) <- c("chr", "start", "end")
 
-circexp <- read.table("/data/projects/paper_results/pos_results/pos_circexplorer2.bed", header=F, sep="\t")
+circexp <- read.table("/data/projects/circ_paper_results/sim_data/pos_circexplorer2.bed", header=F, sep="\t")
 colnames(circexp) <- c("chr", "start", "end", "strand", "count")
 
-ciri <- read.table("/data/projects/paper_results/pos_results/pos_ciriquant.bed", header=F, sep="\t")
+ciri <- read.table("/data/projects/circ_paper_results/sim_data/pos_ciriquant.bed", header=F, sep="\t")
 colnames(ciri) <- c("chr", "start", "end", "strand", "count")
 
-circrna_finder <- read.table("/data/projects/paper_results/pos_results/pos_circrna_finder.bed", header=F, sep="\t")
+circrna_finder <- read.table("/data/projects/circ_paper_results/sim_data/pos_circrna_finder.bed", header=F, sep="\t")
 colnames(circrna_finder) <- c("chr", "start", "end", "strand", "count")
 
-dcc <- read.table("/data/projects/paper_results/pos_results/pos_dcc.bed", header=F, sep="\t")
+dcc <- read.table("/data/projects/circ_paper_results/sim_data/pos_dcc.bed", header=F, sep="\t")
 colnames(dcc) <- c("chr", "start", "end", "strand", "count")
 
-find_circ <- read.table("/data/projects/paper_results/pos_results/pos_find_circ.bed", header=F, sep="\t")
+find_circ <- read.table("/data/projects/circ_paper_results/sim_data/pos_find_circ.bed", header=F, sep="\t")
 colnames(find_circ) <- c("chr", "start", "end", "strand", "count")
 
-mapsplice <- read.table("/data/projects/paper_results/pos_results/pos_mapsplice.bed", header=F, sep="\t")
+mapsplice <- read.table("/data/projects/circ_paper_results/sim_data/pos_mapsplice.bed", header=F, sep="\t")
 colnames(mapsplice) <- c("chr", "start", "end", "strand", "count")
 
-segemehl <- read.table("/data/projects/paper_results/pos_results/pos_segemehl.bed", header=F, sep="\t")
+segemehl <- read.table("/data/projects/circ_paper_results/sim_data/pos_segemehl.bed", header=F, sep="\t")
 colnames(segemehl) <- c("chr", "start", "end", "strand", "count")
 
-nf_circ <- read.table("/data/projects/paper_results/pos_results/matrix_no_filt/mat_gen/circRNA_counts.txt", header=T, sep="\t")
+nf_circ <- read.table("/data/projects/circ_paper_results/sim_data/matrix_no_filt/mat_gen/circRNA_counts.txt", header=T, sep="\t")
 colnames(nf_circ) <- c("chr", "start", "end", "strand", "count")
 ```
 
@@ -148,14 +151,14 @@ library(lattice)
 library(grid)
 
 #png("comm_prop_no_filt.png",width = 500, height = 500, pointsize = 14)  
-svg("~/Desktop/comm_prop_no_filt.svg", width=8, height=8)
+#svg("~/Desktop/comm_prop_no_filt.svg", width=8, height=8)
 levelplot(out_mat, 
           col.regions = rocket(100, begin = 0, end = 1, alpha = 0.9, direction = 1), 
           scales=list(x=list(rot=45), cex = 1.5),
           ylab = "",
           xlab = "")
 #grid.text("Proportion of common candidates", .86, .6, rot = 270, gp = gpar(fontface = "bold", fontsize=12))
-dev.off()
+#dev.off()
 ```
 ## Calculate Accuracy(also given as precision in other paper..), Sensitivity and F1 score for Simulated dataset. 
 Please note that sensitivity IS recall, the authors of the paper bizarrely decide to switch between the two at will. 
@@ -212,7 +215,7 @@ args <-commandArgs(T)
 #args[1]<-"/home/wqj/code/circPipe-master/final.matrix"
 #finalmatrix <- as.data.frame(read_delim(args[1],delim = "\t"))
 
-finalmatrix <- read.table("/data/projects/paper_results/pos_results/matrix_no_filt/mat_gen/circRNA_counts.txt", header=T, sep="\t")
+finalmatrix <- read.table("/data/projects/circ_paper_results/sim_data/matrix_no_filt/mat_gen/circRNA_counts.txt", header=T, sep="\t")
 
 id <- paste(finalmatrix$Chr, finalmatrix$Start, finalmatrix$Stop, sep="-")
 
@@ -267,12 +270,27 @@ bed_list <- list(b, c)
 #png("circos_no_filt.png",width=5000, height=5000, res = 1000)
 #svg("~/Desktop/circos_no_filt.svg", width=8, height=8, pointsize = 18)
 par(mar=c(1,1,1,1))
-circos.initializeWithIdeogram(species = 'hg19',chromosome.index = chr)
-circos.genomicRainfall(bed_list, pch=c(20,18), cex=c(0.4,0.5), col=c("#0000FF80", "#FF000080"))
-circos.genomicDensity(b, col = c("#0000FF80"), track.height = 0.1)
-circos.genomicDensity(c, col = c("#FF000080"), track.height = 0.1)
-circos.clear()
+no_filt_circos <- circos.initializeWithIdeogram(species = 'hg19',chromosome.index = chr);
+                  circos.genomicRainfall(bed_list, pch=c(20,18), cex=c(0.4,0.5), col=c("#0000FF80", "#FF000080"));
+                  circos.genomicDensity(b, col = c("#0000FF80"), track.height = 0.1);
+                  circos.genomicDensity(c, col = c("#FF000080"), track.height = 0.1);
+                  circos.clear()
 #dev.off()
+
+
+Cairo::Cairo(
+  30, #length
+  30, #width
+  file = paste("nameofplot", ".png", sep = ""),
+  type = "png", #tiff
+  bg = "white", #white or transparent depending on your requirement 
+  dpi = 300,
+  units = "cm" #you can change to pixels etc 
+)
+plot(p) #p is your graph object 
+dev.off()
+
+
 ```
 
 
@@ -280,6 +298,7 @@ circos.clear()
 
 #################################################################
 
+## simu data
 ## CLEAR SESSION - START AGAIN WITH FILTERED NF_CIRCRNA DATAFRAME 
 
 #################################################################
@@ -300,31 +319,31 @@ circos.clear()
 
 ```{R}
 
-glio <- read.table("/data/projects/paper_results/pos_results/glioblastoma.bed", header=F, sep="\t")
+glio <- read.table("/data/projects/circ_paper_results/sim_data/glioblastoma.bed", header=F, sep="\t")
 colnames(glio) <- c("chr", "start", "end")
 
-circexp <- read.table("/data/projects/paper_results/pos_results/matrix_filt/bsj_2_beds/pos_circexplorer2.bed", header=F, sep="\t")
+circexp <- read.table("/data/projects/circ_paper_results/sim_data/matrix_filt/bsj_2_beds/pos_circexplorer2.bed", header=F, sep="\t")
 colnames(circexp) <- c("chr", "start", "end", "strand", "count")
 
-ciri <- read.table("/data/projects/paper_results/pos_results/matrix_filt/bsj_2_beds/pos_ciriquant.bed", header=F, sep="\t")
+ciri <- read.table("/data/projects/circ_paper_results/sim_data/matrix_filt/bsj_2_beds/pos_ciriquant.bed", header=F, sep="\t")
 colnames(ciri) <- c("chr", "start", "end", "strand", "count")
 
-circrna_finder <- read.table("/data/projects/paper_results/pos_results/matrix_filt/bsj_2_beds/pos_circrna_finder.bed", header=F, sep="\t")
+circrna_finder <- read.table("/data/projects/circ_paper_results/sim_data/matrix_filt/bsj_2_beds/pos_circrna_finder.bed", header=F, sep="\t")
 colnames(circrna_finder) <- c("chr", "start", "end", "strand", "count")
 
-dcc <- read.table("/data/projects/paper_results/pos_results/matrix_filt/bsj_2_beds/pos_dcc.bed", header=F, sep="\t")
+dcc <- read.table("/data/projects/circ_paper_results/sim_data/matrix_filt/bsj_2_beds/pos_dcc.bed", header=F, sep="\t")
 colnames(dcc) <- c("chr", "start", "end", "strand", "count")
 
-find_circ <- read.table("/data/projects/paper_results/pos_results/matrix_filt/bsj_2_beds/pos_find_circ.bed", header=F, sep="\t")
+find_circ <- read.table("/data/projects/circ_paper_results/sim_data/matrix_filt/bsj_2_beds/pos_find_circ.bed", header=F, sep="\t")
 colnames(find_circ) <- c("chr", "start", "end", "strand", "count")
 
-mapsplice <- read.table("/data/projects/paper_results/pos_results/matrix_filt/bsj_2_beds/pos_mapsplice.bed", header=F, sep="\t")
+mapsplice <- read.table("/data/projects/circ_paper_results/sim_data/matrix_filt/bsj_2_beds/pos_mapsplice.bed", header=F, sep="\t")
 colnames(mapsplice) <- c("chr", "start", "end", "strand", "count")
 
-segemehl <- read.table("/data/projects/paper_results/pos_results/matrix_filt/bsj_2_beds/pos_segemehl.bed", header=F, sep="\t")
+segemehl <- read.table("/data/projects/circ_paper_results/sim_data/matrix_filt/bsj_2_beds/pos_segemehl.bed", header=F, sep="\t")
 colnames(segemehl) <- c("chr", "start", "end", "strand", "count")
 
-nf_circ <- read.table("/data/projects/paper_results/pos_results/matrix_filt/mat_comb/circRNA_counts.txt", header=T, sep="\t")
+nf_circ <- read.table("/data/projects/circ_paper_results/sim_data/matrix_filt/bsj_2_beds/matrix_for_R.txt", header=T, sep="\t")
 colnames(nf_circ) <- c("chr", "start", "end", "strand", "count")
 ```
 
@@ -439,14 +458,16 @@ library(lattice)
 library(grid)
 
 #png("comm_prop_filt.png",width = 500, height = 500, pointsize = 14)  
-svg("~/Desktop/comm_prop_filt.svg", width=8, height=8)
-levelplot(out_mat, 
+#svg("~/Desktop/comm_prop_filt.svg", width=8, height=8)
+comm_prop_sim<- levelplot(out_mat, 
           col.regions = rocket(100, begin = 0, end = 1, alpha = 0.9, direction = 1), 
-          scales=list(x=list(rot=45), cex = 1.5),
+          scales=list(x=list(rot=45), cex = 1),
           ylab = "",
           xlab = "")
 #grid.text("Proportion of common candidates", .86, .6, rot = 270, gp = gpar(fontface = "bold", fontsize=12))
-dev.off()
+#dev.off()
+
+
 ```
 ## Calculate Accuracy(also given as precision in other paper..), Sensitivity and F1 score for Simulated dataset. 
 Please note that sensitivity IS recall, the authors of the paper bizarrely decide to switch between the two at will. 
@@ -507,7 +528,7 @@ args <-commandArgs(T)
 #args[1]<-"/home/wqj/code/circPipe-master/final.matrix"
 #finalmatrix <- as.data.frame(read_delim(args[1],delim = "\t"))
 
-finalmatrix <- read.table("/data/projects/paper_results/pos_results/matrix_filt/mat_comb/circRNA_counts.txt", header=T, sep="\t")
+finalmatrix <- read.table("/data/projects/circ_paper_results/pos_results/matrix_filt/mat_comb/circRNA_counts.txt", header=T, sep="\t")
 
 id <- paste(finalmatrix$Chr, finalmatrix$Start, finalmatrix$Stop, sep="-")
 
@@ -568,4 +589,1918 @@ circos.genomicDensity(b, col = c("#0000FF80"), track.height = 0.1)
 circos.genomicDensity(c, col = c("#FF000080"), track.height = 0.1)
 circos.clear()
 dev.off()
+```
+
+
+
+
+####################################
+
+## GLIO REAL RNase minus
+
+####################################
+
+
+# Read in bed files 
+## simu data no filt
+
+```{R}
+
+glio <- read.table("/data/projects/circ_paper_results/sim_data/glioblastoma.bed", header=F, sep="\t")
+colnames(glio) <- c("chr", "start", "end")
+
+circexp <- read.table("/data/projects/circ_paper_results/glio_data/rnase_minus/filt/glioblastoma_RNase_minus_circexplorer2.bed", header=F, sep="\t")
+colnames(circexp) <- c("chr", "start", "end", "strand", "count")
+
+ciri <- read.table("/data/projects/circ_paper_results/glio_data/rnase_minus/filt/glioblastoma_RNase_minus_ciriquant.bed", header=F, sep="\t")
+colnames(ciri) <- c("chr", "start", "end", "strand", "count")
+
+circrna_finder <- read.table("/data/projects/circ_paper_results/glio_data/rnase_minus/filt/glioblastoma_RNase_minus_circrna_finder.bed", header=F, sep="\t")
+colnames(circrna_finder) <- c("chr", "start", "end", "strand", "count")
+
+dcc <- read.table("/data/projects/circ_paper_results/glio_data/rnase_minus/filt/glioblastoma_RNase_minus_dcc.bed", header=F, sep="\t")
+colnames(dcc) <- c("chr", "start", "end", "strand", "count")
+
+find_circ <- read.table("/data/projects/circ_paper_results/glio_data/rnase_minus/filt/glioblastoma_RNase_minus_find_circ.bed", header=F, sep="\t")
+colnames(find_circ) <- c("chr", "start", "end", "strand", "count")
+
+mapsplice <- read.table("/data/projects/circ_paper_results/glio_data/rnase_minus/filt/glioblastoma_RNase_minus_mapsplice.bed", header=F, sep="\t")
+colnames(mapsplice) <- c("chr", "start", "end", "strand", "count")
+
+segemehl <- read.table("/data/projects/circ_paper_results/glio_data/rnase_minus/filt/glioblastoma_RNase_minus_segemehl.bed", header=F, sep="\t")
+colnames(segemehl) <- c("chr", "start", "end", "strand", "count")
+
+nf_circ <- read.table("/data/projects/circ_paper_results/glio_data/rnase_minus/filt/mat_gen/circRNA_matrix.txt", header=T, sep="\t")
+colnames(nf_circ) <- c("chr", "start", "end", "strand", "count")
+```
+
+
+## format coordinates to vectors/factors to compare common circs. 
+
+Remove duplicate entries here - glioblastoma circrnas do not have strand information so cannot tell between false positives and poor experimental design on my behalf. 
+
+```{R}
+glio$vec <- as.factor(paste(glio$chr, glio$start, glio$end, sep="-"))
+
+circexp$vec <- as.factor(paste(circexp$chr, circexp$start, circexp$end, sep="-"))
+circexp <- circexp[!duplicated(circexp$vec),]
+
+ciri$vec <- as.factor(paste(ciri$chr, ciri$start, ciri$end, sep="-"))
+ciri <- ciri[!duplicated(ciri$vec),]
+
+circrna_finder$vec <- as.factor(paste(circrna_finder$chr, circrna_finder$start, circrna_finder$end, sep="-"))
+circrna_finder <- circrna_finder[!duplicated(circrna_finder$vec),]
+
+dcc$vec <- as.factor(paste(dcc$chr, dcc$start, dcc$end, sep="-"))
+dcc <- dcc[!duplicated(dcc$vec),]
+
+find_circ$vec <- as.factor(paste(find_circ$chr, find_circ$start, find_circ$end, sep="-"))
+find_circ <- find_circ[!duplicated(find_circ$vec),]
+
+mapsplice$vec <- as.factor(paste(mapsplice$chr, mapsplice$start, mapsplice$end, sep="-"))
+mapsplice <- mapsplice[!duplicated(mapsplice$vec),]
+
+segemehl$vec <- as.factor(paste(segemehl$chr, segemehl$start, segemehl$end, sep="-"))
+segemehl <- segemehl[!duplicated(segemehl$vec),]
+
+nf_circ$vec <- as.factor(paste(nf_circ$chr, nf_circ$start, nf_circ$end, sep="-"))
+nf_circ <- nf_circ[!duplicated(nf_circ$vec),]
+
+```
+
+## Proportion of candidates detected by 1 tool also detected by every other tool 
+Strategy is to compare two quantification tools $i,j$ as follows: 
+
+* The number of deteced circRNAs is given as $N_i, N_j$ for tool $i,j$ respectively. 
+
+* The common candidates detected by both $i,j$ is $C_(i,j)$. 
+
+* For tool $i$, the proportion of common circRNAs is given as $P_(i,j)=C_(i,j)/N_(i)$.
+
+Function for this is stored under `prop_comm` and deployed in a for loop to calculate $P_(i,j)$ for each tool. Once results for a tool has been stored in a vector, populate the output dataframe and move to the next tool. Present the results as a heatmap for easy interpretation. 
+
+```{R}
+## throw them in a list to iterate over 
+
+result_list <- list()
+
+# Hijakcing this code to place CE_union, SG_union etc - i.e the number of true called circrnas between rnase dep rnase enrivhed
+NF_at_least_2 <- unlist(list(CE_union, CI_union, CF_union, SG_union, MS_union, FC_union, DC_union))
+tabulate <- table(NF_at_least_2)
+NF_union <- names(tabulate)[tabulate >= 2]
+NF_union <- unique(NF_union)
+
+
+result_list$circexp <- CE_union
+result_list$ciri <- CI_union
+result_list$circrna <- CF_union
+result_list$dcc <- DC_union
+result_list$find_circ <- FC_union
+result_list$mapsplice <- MS_union
+result_list$segemehl <- SG_union
+result_list$nf_circ <- NF_union
+
+## init empty df 
+out_df <- data.frame(matrix(nrow=8,ncol=8))
+
+## function for prop comm circrnas between i,j
+prop_comm <- function(i,j){
+  ## common circs in i,j
+  c_i_j <- sum(i %in% j)
+  ## proportion of circs in i vs j             
+  p_i_j <- c_i_j/length(i)
+  return(p_i_j)
+}
+
+## loop over tool to create vector of results, append to row of df. 
+
+for(it in seq(from=1, to=8, by=1)){
+  i <- it
+  vec <- c()
+  for(id in seq(from=1, to=8, by=1)){
+    j <- id
+    i_v <- result_list[[i]]
+    j_v <- result_list[[j]]
+    p_i_j <- prop_comm(i_v,j_v)
+    vec <- c(vec, p_i_j)
+  }
+  out_df[i,] <- vec
+}
+
+col_row <- c("CIRCexplorer2", "CIRIquant", "circRNA_Finder", "DCC", "find_circ", "MapSplice", "Segemehl", "nf-core/circrna")
+colnames(out_df) <- col_row
+rownames(out_df) <- col_row
+```
+
+## Proportion common heatmap. Work in prog, make more visually appealing. 
+
+```{R, message=F, echo=F}
+library(lattice)
+library(grid)
+library(viridis)
+
+quantile_breaks <- function(xs, n = 7) {
+  breaks <- quantile(xs, probs = seq(0, 1, length.out = n))
+  breaks[!duplicated(breaks)]
+}
+
+out_mat_glio <- as.matrix(out_df)
+
+mat_breaks <- quantile_breaks(out_mat_glio, n = 7)
+
+library(lattice)
+library(grid)
+
+#png("comm_prop_no_filt.png",width = 500, height = 500, pointsize = 14)  
+#svg("~/Desktop/comm_prop_no_filt.svg", width=8, height=8)
+glio_prop_comm <-levelplot(out_mat_glio, 
+          col.regions = rocket(100, begin = 0, end = 1, alpha = 0.9, direction = 1), 
+          scales=list(x=list(rot=45), cex = 2),
+          ylab = "",
+          xlab = "")
+#grid.text("Proportion of common candidates", .86, .6, rot = 270, gp = gpar(fontface = "bold", fontsize=12))
+#dev.off()
+
+Cairo::Cairo(
+  55, #length
+  40, #width
+  file = "/data/projects/circ_paper_results/prop_comm.png",
+  type = "png", #tiff
+  bg = "white", #white or transparent depending on your requirement 
+  dpi = 300,
+  pointsize = 20,
+  units = "cm" #you can change to pixels etc 
+)
+cowplot::plot_grid(comm_prop_sim, glio_prop_comm, ncol=2, nrow=1, labels=c("A", "B"), vjust = 10, label_size = 30)
+dev.off()
+
+
+```
+## Calculate Accuracy(also given as precision in other paper..), Sensitivity and F1 score for Simulated dataset. 
+Please note that sensitivity IS recall, the authors of the paper bizarrely decide to switch between the two at will. 
+
+```{R}
+
+df <- data.frame(matrix(nrow=8, ncol=1))
+rownames(df) <- col_row
+
+for(i in seq(from=1, to=8, by=1)){
+  
+  a <- c()
+  b <- c()
+  for(z in seq(from=1, to=8, by=1)){
+     detected <- length(result_list[[z]])
+     true_positive <- sum(result_list[[z]] %in% glio$vec)
+     
+     a <- c(a, detected)
+     b <- c(b, true_positive)
+  }
+}
+
+df[,1] <- a
+df[,2] <- b
+
+colnames(df) <- c("#Detected", "True Positive")
+
+df$Precision <- (df$`True Positive`/df$`#Detected`)*100
+
+df$Sensitivity <- (df$`True Positive`)/(df$`True Positive` + (7267 - df$`True Positive`)) * 100
+                           
+df$F1 <- 2*(((df$Precision)*(df$Sensitivity))/((df$Precision) + (df$Sensitivity)))
+
+library(data.table)
+
+DT::datatable(df)
+```
+
+## circos plot for fun because .. looks well. 
+
+#### Unfiltered result first ####
+
+blue pos red false
+
+```{R}
+library(readr)
+library(ggplot2)
+library(circlize)
+library(dplyr)
+library(RColorBrewer)
+options(stringsAsFactors=F)
+args <-commandArgs(T)
+#setwd("./")
+#args[1]<-"/home/wqj/code/circPipe-master/final.matrix"
+#finalmatrix <- as.data.frame(read_delim(args[1],delim = "\t"))
+
+finalmatrix <- read.table("/data/projects/circ_paper_results/pos_results/matrix_no_filt/mat_gen/circRNA_counts.txt", header=T, sep="\t")
+
+id <- paste(finalmatrix$Chr, finalmatrix$Start, finalmatrix$Stop, sep="-")
+
+finalmatrix$id <- id
+
+finalmatrix <- finalmatrix[!duplicated(finalmatrix$id),]
+
+#                                                          blue            red
+finalmatrix$col <- ifelse(finalmatrix$id %in% glio$vec, "#0000FFFF", "#FFFFFFFF")
+
+chr <- finalmatrix$Chr
+start <- finalmatrix$Start
+end <- finalmatrix$Stop
+strand <- finalmatrix$Strand
+counts <- finalmatrix$combined_counts
+
+a <- data.frame(chr = chr, start = as.numeric(start), end = as.numeric(end), value = counts)
+
+#a=filter(a, chr != "chrM")
+chr<-a$chr
+chr<-factor(chr,ordered = TRUE,levels = c("chr1","chr2","chr3","chr4","chr5","chr6","chr7","chr8","chr9","chr10","chr11","chr12","chr13","chr14","chr15","chr16","chr17","chr18","chr19","chr20","chr21","chr22","chrX","chrY"))
+a$chr<-chr
+a<-a[order(a[,1]),]
+a$chr<-as.character(a$chr)
+chr=unique(a$chr)
+a$color <- finalmatrix$col
+
+
+## try splitting. 
+
+b <- subset(a, a$color == "#0000FFFF")
+b<-b[order(b[,1]),]
+b$chr<-as.character(b$chr)
+c <- subset(a, a$color == "#FFFFFFFF")
+c<-c[order(c[,1]),]
+c$chr<-as.character(c$chr)
+
+bed_list <- list(b, c)
+
+
+#png("circos_filt.png",width=1800, height=1800, res = 300)
+#par(mar=c(1,1,1,1))
+#circos.initializeWithIdeogram(species = 'hg19',chromosome.index = chr)
+#circos.genomicTrackPlotRegion(bed_list,panel.fun = function(region, value,...){
+#  i = getI(...)
+#  circos.genomicPoints(region, value, cex = 0.3, pch = i, col=c("#FF000080", "#0000FF80"), ...)})
+#bg.col <- rep(c("#EFEFEF", "#CCCCCC"), 12)
+#circos.trackHist(a$chr, a$start, bg.col = bg.col, col = "blue",bin.size = 3000000)
+#circos.clear()
+#dev.off()
+
+#png("circos_no_filt.png",width=5000, height=5000, res = 1000)
+#svg("~/Desktop/circos_no_filt.svg", width=8, height=8, pointsize = 18)
+par(mar=c(1,1,1,1))
+circos.initializeWithIdeogram(species = 'hg19',chromosome.index = chr)
+circos.genomicRainfall(bed_list, pch=c(20,18), cex=c(0.4,0.5), col=c("#0000FF80", "#FF000080"))
+circos.genomicDensity(b, col = c("#0000FF80"), track.height = 0.1)
+circos.genomicDensity(c, col = c("#FF000080"), track.height = 0.1)
+circos.clear()
+#dev.off()
+```
+
+
+
+
+# in the simulated dataset, try to show tool combinations for the user. 
+
+
+```{r}
+library(ComplexHeatmap)
+library(circlize)
+path="/data/projects/circ_paper_results/sim_data/factor_analysis"
+
+CE <- read.table(paste(path, "/pos_circexplorer2_factor.bed", sep=""))
+CF <- read.table(paste(path, "/pos_circrna_finder_factor.bed", sep=""))
+CI <- read.table(paste(path, "/pos_ciriquant_factor.bed", sep=""))
+DC <- read.table(paste(path, "/pos_dcc_factor.bed", sep=""))
+FC <- read.table(paste(path, "/pos_find_circ_factor.bed", sep=""))
+MS <- read.table(paste(path, "/pos_mapsplice_factor.bed", sep=""))
+SG <- read.table(paste(path, "/pos_segemehl_factor.bed", sep=""))
+GL <- read.table(paste(path, "/glio_factor.bed", sep=""))
+
+venn_list <- list(CIRCexplorer2=unique(CE$V1),
+                  circRNA_finder=unique(CF$V1),
+                  CIRIquant=unique(CI$V1),
+                  DCC=unique(DC$V1),
+                  find_circ=unique(FC$V1),
+                  MapSplice=unique(MS$V1),
+                  Segemehl=unique(SG$V1))
+
+univ_set <- GL$V1
+
+m1 = make_comb_mat(venn_list, mode = "union", universal_set = univ_set)
+#one_tool = m1[,120:127]
+#foo_tool = m1[,1:127]
+#two_tool = m1[,100:120]
+#three_tool = m1[,65:99]
+up <- UpSet(m1)
+draw(up)
+up_order <- column_order(up)
+
+## trick here is to match the column orders here with the statistics generated below. 
+```
+
+# l'improvement 
+
+```{R}
+df$Precision <- (df$`True Positive`/df$`#Detected`)*100
+
+df$Sensitivity <- (df$`True Positive`)/(df$`True Positive` + (7267 - df$`True Positive`)) * 100
+                           
+df$F1 <- 2*(((df$Precision)*(df$Sensitivity))/((df$Precision) + (df$Sensitivity)))
+```
+
+```{R}
+library(circlize)
+
+m = one_tool
+ss = set_size(m) # TP
+cs = comb_size(m)
+
+
+ht = UpSet(m, 
+           
+           #set_order = order(ss),
+           comb_order = order(comb_degree(m), -cs),
+    
+           top_annotation = HeatmapAnnotation(
+                            "True circRNAs \n called" = anno_barplot(cs, ylim = c(0, max(cs)*1.1),
+                                                                    border = FALSE, 
+                                                                    gp = gpar(fill = 1:7), 
+                                                                    height = unit(4, "cm")
+                                              ), 
+        
+          annotation_name_side = "left", 
+          annotation_name_rot = 0),
+    
+          
+          #left_annotation = rowAnnotation(
+                        #   "# True Positives" = anno_barplot(-ss, 
+                      #      baseline = 0,
+                       #     axis_param = list(
+                                 #        at = c(0, -1000, -2000, -3000, -4000, -5000, -6000, -7000),
+                                 #       labels = c(0, 1000, 2000, 3000, 4000, 5000, 6000, 7000),
+                                  #      labels_rot = 45),
+                           # border = FALSE, 
+                          #  gp = gpar(fill = c("#F0F0FF")), 
+                           # width = unit(4, "cm")
+                      #  )
+        #set_name = anno_text(set_name(m), 
+         #   location = 0.5, 
+          #  just = "center",
+           # width = max_text_width(set_name(m)) + unit(4, "mm"))
+   # ), 
+    right_annotation = NULL,
+    show_row_names = T,
+   
+   bottom_annotation = HeatmapAnnotation(Run_time = anno_boxplot(RT_2)
+    #RAM = anno_boxplot(RAM),
+    #Disk = anno_boxplot(Disk))
+   
+  )
+    #bottom_annotation = HeatmapAnnotation(Accuracy = accuracy, gp = gpar("black"), col = list(Accuracy = col_fun), show_annotation_name = F),
+    #comb_col = "#000000", bg_col = c("#FFF0F0")
+    # )
+
+ht = draw(ht)
+
+od = column_order(ht)
+
+decorate_annotation("True circRNAs \n called", {
+    grid.text(cs[od], x = seq_along(cs), y = unit(cs[od], "native") + unit(2, "pt"), 
+        default.units = "native", just = c("left", "bottom"), 
+        gp = gpar(fontsize = 8, col = "#404040"), rot = 45)
+})
+
+```
+
+# issue for GY
+
+```{R}
+library(ComplexHeatmap)
+
+load("/data/issue.RData")
+
+RAM <- data.frame("Segemehl" = c(50.7, 51.2), "DCC" = c(97.02, 130.2), "CIRIquant" = c(74.1, 76), "find_circ" = c(44.0, 45.0), "MapSplice" = c(5.50, 7.40), "circRNA_finder" = c(63.72, 63.22), "CIRCexplorer2" = c(63.02, 63.02))
+
+RT <- data.frame("Segemehl" = c(294,373), "DCC" = c(276, 1018), "CIRIquant" = c(165, 176), "find_circ" = c(462, 283), "MapSplice" = c(1510, 876), "circRNA_finder" = c(116, 296), "CIRCexplorer2" = c(116, 297))
+
+Disk <- data.frame("Segemehl" = c(79.10,84.40), "DCC" = c(299.75, 568.81), "CIRIquant" = c(572,531), "find_circ" = c(94.3, 140.7), "MapSplice" = c(559,430), "circRNA_finder" = c(197.15, 275.11), "CIRCexplorer2" = c(198.75, 277.61))
+
+## REAL FORMAT :) 
+
+RT <- RT[, c("CIRCexplorer2", "circRNA_finder", "CIRIquant", "DCC", "find_circ", "MapSplice", "Segemehl")]
+RAM <- RAM[, c("CIRCexplorer2", "circRNA_finder", "CIRIquant", "DCC", "find_circ", "MapSplice", "Segemehl")]
+Disk <- Disk[, c("CIRCexplorer2", "circRNA_finder", "CIRIquant", "DCC", "find_circ", "MapSplice", "Segemehl")]
+
+## manually matched, must rearrange RT this order to render correctly
+
+ss = set_size(m)
+cs = comb_size(m)
+
+ht = UpSet(m, 
+           set_order = order(ss),
+           comb_order = order(comb_degree(m), -cs),
+           right_annotation = NULL,
+           show_row_names = T,
+           top_annotation = HeatmapAnnotation("True\ncircRNA\ncalled" = anno_barplot(cs, ylim = c(0, max(cs)*1.1), border = FALSE, gp = gpar(fill = 1:7), height = unit(4, "cm")), annotation_name_side = "left", annotation_name_rot = 0, annotation_name_align = T),
+           bottom_annotation = HeatmapAnnotation(Time = anno_boxplot(RT, height = unit(3, "cm"), gp = gpar(fill = 1:7)),
+                                                 RAM = anno_boxplot(RAM, height = unit(3, "cm"), gp = gpar(fill = 1:7)),
+                                                 Disk = anno_boxplot(Disk, height = unit(3, "cm"), gp = gpar(fill = 1:7)),
+                                                                     annotation_name_side = "left", annotation_name_rot = 0,
+                                                 annotation_label = c("Time (minutes)", "Memory (GB)", "I/O Disk (GB)"),
+                                                 annotation_name_align = T))
+
+draw(ht)
+
+png(filename = "/data/projects/circ_paper_results/glio_data/upset_comp_met.png", width = 8, height = 9, units = "in", res = 600, pointsize = 12)
+draw(ht); column_order(ht); decorate_annotation("True\ncircRNA\ncalled", {
+    grid.text(cs[od], x = seq_along(cs), y = unit(cs[od], "native") + unit(2, "pt"), 
+        default.units = "native", just = c("left", "bottom"), 
+        gp = gpar(fontsize = 8, col = "#404040"), rot = 45)
+})
+dev.off()
+
+decorate_annotation("True\ncircRNA\ncalled", {
+    grid.text(cs[od], x = seq_along(cs), y = unit(cs[od], "native") + unit(2, "pt"), 
+        default.units = "native", just = c("left", "bottom"), 
+        gp = gpar(fontsize = 8, col = "#404040"), rot = 45)
+})
+dev.off()
+
+# no need for the fucking upset plot ya dope 
+
+# reformate for ggploooot compatability
+Time_long <- tidyr::gather(RT, V1, V2)
+Time_long$stat <- "Run Time (minutes)"
+RAM_long <- tidyr::gather(RAM, V1, V2)
+RAM_long$stat <- "RAM (GB)"
+Disk_long <- tidyr::gather(Disk, V1, V2)
+Disk_long$stat <- "Write I/O (GB)"
+
+mat <- rbind(Time_long, RAM_long, Disk_long)
+
+n_true <- data.frame(V1=c("CIRCexplorer2", "circRNA_finder","CIRIquant","DCC","find_circ", "MapSplice", "Segemehl"), V2=c(2955,3244,5314,5669,4089,3471,6055))
+n_true$stat <- "# True circRNAs Detected"
+
+ram_pl <- ggboxplot(RAM_long, x="V1", y="V2", fill="V1", ylab = "RAM (GB)", xlab="", bxp.errorbar = T, ggtheme=theme_classic()) + rotate_x_text(angle = 45)
+
+ram_mod <- ggpar(ram_pl, font.xtickslab = c("bold"))
+
+time_pl <- ggboxplot(Time_long, x="V1", y="V2", fill="V1", ylab = "Time (minutes)", xlab="", bxp.errorbar = T, ggtheme=theme_classic()) + rremove("x.text") + rremove("x.ticks")
+
+disk_pl <- ggboxplot(Disk_long, x="V1", y="V2", fill="V1", ylab = "Write I/O (GB)", xlab="", bxp.errorbar = T, ggtheme=theme_classic()) + rotate_x_text(angle = 45) 
+
+disk_mod <- ggpar(disk_pl, font.xtickslab = c("bold"))
+
+detected_pl <- ggbarplot(n_true, x="V1", y="V2", fill="V1", ylab="# true circRNA Detected", xlab="", ggtheme=theme_classic())
+
+detected_mod <- ggpar(detected_pl, legend.title = "Tool: ") + rremove("x.text") + rremove("x.ticks")
+
+plot <- ggarrange(detected_mod, time_pl, disk_mod, ram_mod, ncol=2, nrow=2, common.legend = T, align = "v", widths = c(1,1), heights = c(1,1.5), labels = c("A", "B", "C", "D"), vjust = 0.5)
+
+
+
+Cairo::Cairo(
+  30, #length
+  20, #width
+  file = "/data/projects/circ_paper_results/plots/glio_stats.png",
+  type = "png", #tiff
+  bg = "white", #white or transparent depending on your requirement 
+  dpi = 300,
+  units = "cm" #you can change to pixels etc 
+)
+plot(plot)
+dev.off()
+
+```
+
+# How many circRNAs were called by each tool? (real data)
+
+```{R}
+path = "/data/projects/circ_paper_results/glio_data/rnase_minus/filt/factor_analysis/"
+glob = "glioblastoma_RNase_minus_"
+
+CE_M <- read.table(paste(path, glob, "circexplorer2_factor.bed", sep=""))
+CF_M <- read.table(paste(path, glob, "circrna_finder_factor.bed", sep=""))
+CI_M <- read.table(paste(path, glob, "ciriquant_factor.bed", sep=""))
+DC_M <- read.table(paste(path, glob, "dcc_factor.bed", sep=""))
+FC_M <- read.table(paste(path, glob, "find_circ_factor.bed", sep=""))
+MS_M <- read.table(paste(path, glob, "mapsplice_factor.bed", sep=""))
+SG_M <- read.table(paste(path, glob, "segemehl_factor.bed", sep=""))
+
+path = "/data/projects/circ_paper_results/glio_data/rnase_plus/filt/factor_analysis/"
+glob = "glioblastoma_RNase_plus_"
+
+CE_P <- read.table(paste(path, glob, "circexplorer2_factor.bed", sep=""))
+CF_P <- read.table(paste(path, glob, "circrna_finder_factor.bed", sep=""))
+CI_P <- read.table(paste(path, glob, "ciriquant_factor.bed", sep=""))
+DC_P <- read.table(paste(path, glob, "dcc_factor.bed", sep=""))
+FC_P <- read.table(paste(path, glob, "find_circ_factor.bed", sep=""))
+MS_P <- read.table(paste(path, glob, "mapsplice_factor.bed", sep=""))
+SG_P <- read.table(paste(path, glob, "segemehl_factor.bed", sep=""))
+
+# sure you want to remove sign for set analysis? this is for your table. prop comm im not sure... YES YOU REMOVED SIGNS
+CE_union <- intersect(CE_M$V1, CE_P$V1)
+CE_union <- sub('^([^:]+:[^:]+).*', '\\1', CE_union)
+CF_union <- intersect(CF_M$V1, CF_P$V1)
+CF_union <- sub('^([^:]+:[^:]+).*', '\\1', CF_union)
+CI_union <- intersect(CI_M$V1, CI_P$V1)
+CI_union <- sub('^([^:]+:[^:]+).*', '\\1', CI_union)
+DC_union <- intersect(DC_M$V1, DC_P$V1)
+DC_union <- sub('^([^:]+:[^:]+).*', '\\1', DC_union)
+FC_union <- intersect(FC_M$V1, FC_P$V1)
+FC_union <- sub('^([^:]+:[^:]+).*', '\\1', FC_union)
+MS_union <- intersect(MS_M$V1, MS_P$V1)
+MS_union <- sub('^([^:]+:[^:]+).*', '\\1', MS_union)
+SG_union <- intersect(SG_M$V1, SG_P$V1)
+SG_union <- sub('^([^:]+:[^:]+).*', '\\1', SG_union)
+SG_union <- unique(SG_union)
+
+univ_set <- c(SG_union, MS_union, FC_union, DC_union, CI_union, CF_union, CE_union)
+univ_set <- unique(univ_set)
+
+venn_list <- list(CIRCexplorer2=CE_union,
+                  circRNA_finder=CF_union,
+                  CIRIquant=CI_union,
+                  DCC=DC_union,
+                  find_circ=FC_union,
+                  MapSplice=MS_union,
+                  Segemehl=SG_union)
+                  
+
+library(venn)
+library(ggplot2)
+library(ggpolypath)
+venn::venn(venn_list, zcolor = "style", ilcs = 1, plotsize = 50, ggplot = T, box = FALSE)
+
+library(ComplexHeatmap)
+
+## Assess the overlap of tools here :)
+upset_mat <- as.data.frame(list_to_matrix(venn_list))
+upset_mat$sum <- rowSums(upset_mat)
+
+# call by one tool, so thats every row.
+one_tool <- nrow(upset_mat)
+two_tool <- nrow(upset_mat[which(upset_mat$sum >= 2),])
+three_tool <- nrow(upset_mat[which(upset_mat$sum >= 3),])
+four_tool <- nrow(upset_mat[which(upset_mat$sum >= 4),])
+five_tool <- nrow(upset_mat[which(upset_mat$sum >= 5),])
+six_tool <- nrow(upset_mat[which(upset_mat$sum >= 6),])
+seven_tool <- nrow(upset_mat[which(upset_mat$sum >= 7),])
+
+m1 = make_comb_mat(venn_list, mode = "union", universal_set = univ_set)
+
+one_tool <- m1[,1:20]
+
+UpSet(one_tool, set_order = order(set_size(one_tool), decreasing = F),
+      comb_order = order(comb_size(one_tool), decreasing = T))
+      #comb_col = c("red", "blue", "green", "yellow", "purple", "brown", "cyan")[comb_degree(m1_sub)])
+
+bar_pl <- data.frame(n_tool = c("1", "2", "3", "4", "5", "6", "7"),
+                     circs = c(one_tool, two_tool, three_tool, four_tool, five_tool, six_tool, seven_tool))
+
+ggbarplot(bar_pl, x="n_tool", y="circs")
+```
+
+
+# comp cost real dataset
+
+```{R}
+library(ggplot2)
+library(ggpubr)
+
+cost <- read.csv("/data/projects/circ_paper_results/computational_cost.csv", header=T, row.names = "rows")
+
+
+## CMHM format?
+RAM <- data.frame("Segemehl" = c(50.7, 51.2), "DCC" = c(97.02, 130.2), "CIRIquant" = c(74.1, 76), "find_circ" = c(44.0, 45.0), "MapSplice" = c(5.50, 7.40), "circRNA_finder" = c(63.72, 63.22), "CIRCexplorer2" = c(63.02, 63.02))
+
+RT <- data.frame("Segemehl" = c(294,373), "DCC" = c(276, 1018), "CIRIquant" = c(165, 176), "find_circ" = c(462, 283), "MapSplice" = c(1510, 876), "circRNA_finder" = c(116, 296), "CIRCexplorer2" = c(116, 297))
+
+Disk <- data.frame("Segemehl" = c(79.10,84.40), "DCC" = c(299.75, 568.81), "CIRIquant" = c(572,531), "find_circ" = c(94.3, 140.7), "MapSplice" = c(559,430), "circRNA_finder" = c(197.15, 275.11), "CIRCexplorer2" = c(198.75, 277.61))
+
+## REAL FORMAT :) 
+
+RT <- RT[, c("CIRCexplorer2", "circRNA_finder", "CIRIquant", "DCC", "find_circ", "MapSplice", "Segemehl")]
+
+RAM <- RAM[, c("CIRCexplorer2", "circRNA_finder", "CIRIquant", "DCC", "find_circ", "MapSplice", "Segemehl")]
+
+Disk <- Disk[, c("CIRCexplorer2", "circRNA_finder", "CIRIquant", "DCC", "find_circ", "MapSplice", "Segemehl")]
+```
+
+## heatmap of recovered counts. 
+
+# use seven_tools to subset vectors. 
+
+```{R}
+seven_tool_circs <- rownames(upset_mat[which(upset_mat$sum >= 7),])
+
+CE_7 <- subset(CE_P, CE_P$V1 %in% seven_tool_circs)
+rownames(CE_7) <- CE_7$V1
+CE_7 <- subset(CE_7, select="V2")
+
+CI_7 <- subset(CI_P, CI_P$V1 %in% seven_tool_circs)
+rownames(CI_7) <- CI_7$V1
+CI_7 <- subset(CI_7, select="V2")
+
+CF_7 <- subset(CF_P, CF_P$V1 %in% seven_tool_circs)
+CF_7 <- CF_7[!duplicated(CF_7$V1),]
+rownames(CF_7) <- CF_7$V1
+CF_7 <- subset(CF_7, select="V2")
+
+DC_7 <- subset(DC_P, DC_P$V1 %in% seven_tool_circs)
+rownames(DC_7) <- DC_7$V1
+DC_7 <- subset(DC_7, select="V2")
+
+FC_7 <- subset(FC_P, FC_P$V1 %in% seven_tool_circs)
+rownames(FC_7) <- FC_7$V1
+FC_7 <- subset(FC_7, select="V2")
+
+MS_7 <- subset(MS_P, MS_P$V1 %in% seven_tool_circs)
+rownames(MS_7) <- MS_7$V1
+MS_7 <- subset(MS_7, select="V2")
+
+SG_7 <- subset(SG_P, SG_P$V1 %in% seven_tool_circs)
+rownames(SG_7) <- SG_7$V1
+SG_7 <- subset(SG_7, select="V2")
+
+rnase_treat_mat <- cbind(CE_7, CI_7, CF_7, DC_7, FC_7, MS_7, SG_7)
+colnames(rnase_treat_mat) <- c("CIRCexplorer2", "CIRIquant", "circRNA_finder", "DCC", "find_circ", "MapSplice", "Segemehl")
+
+pheatmap(t(rnase_treat_mat), scale = "column", show_rownames = FALSE, show_colnames = F, cluster_cols = TRUE, cluster_rows = T)
+```
+
+
+
+#
+##
+### Combination matrix tyme
+##
+#
+
+
+# calculate the precision, F1, etc for every possible combination. yikes. use filt sim data here. 
+
+```{R}
+glio <- read.table("/data/projects/circ_paper_results/sim_data/glioblastoma.bed", header=F, sep="\t")
+colnames(glio) <- c("chr", "start", "end")
+
+circexp <- read.table("/data/projects/circ_paper_results/sim_data/matrix_filt/bsj_2_beds/pos_circexplorer2.bed", header=F, sep="\t")
+colnames(circexp) <- c("chr", "start", "end", "strand", "count")
+
+ciri <- read.table("/data/projects/circ_paper_results/sim_data/matrix_filt/bsj_2_beds/pos_ciriquant.bed", header=F, sep="\t")
+colnames(ciri) <- c("chr", "start", "end", "strand", "count")
+
+circrna_finder <- read.table("/data/projects/circ_paper_results/sim_data/matrix_filt/bsj_2_beds/pos_circrna_finder.bed", header=F, sep="\t")
+colnames(circrna_finder) <- c("chr", "start", "end", "strand", "count")
+
+dcc <- read.table("/data/projects/circ_paper_results/sim_data/matrix_filt/bsj_2_beds/pos_dcc.bed", header=F, sep="\t")
+colnames(dcc) <- c("chr", "start", "end", "strand", "count")
+
+find_circ <- read.table("/data/projects/circ_paper_results/sim_data/matrix_filt/bsj_2_beds/pos_find_circ.bed", header=F, sep="\t")
+colnames(find_circ) <- c("chr", "start", "end", "strand", "count")
+
+mapsplice <- read.table("/data/projects/circ_paper_results/sim_data/matrix_filt/bsj_2_beds/pos_mapsplice.bed", header=F, sep="\t")
+colnames(mapsplice) <- c("chr", "start", "end", "strand", "count")
+
+segemehl <- read.table("/data/projects/circ_paper_results/sim_data/matrix_filt/bsj_2_beds/pos_segemehl.bed", header=F, sep="\t")
+colnames(segemehl) <- c("chr", "start", "end", "strand", "count")
+
+#nf_circ <- read.table("/data/projects/circ_paper_results/sim_data/matrix_filt/bsj_2_beds/pos_circexplorer2.bed", header=T, sep="\t")
+#colnames(nf_circ) <- c("chr", "start", "end", "strand", "count")
+
+glio$vec <- as.factor(paste(glio$chr, glio$start, glio$end, sep="-"))
+
+circexp$vec <- as.factor(paste(circexp$chr, circexp$start, circexp$end, sep="-"))
+circexp <- circexp[!duplicated(circexp$vec),]
+
+ciri$vec <- as.factor(paste(ciri$chr, ciri$start, ciri$end, sep="-"))
+ciri <- ciri[!duplicated(ciri$vec),]
+
+circrna_finder$vec <- as.factor(paste(circrna_finder$chr, circrna_finder$start, circrna_finder$end, sep="-"))
+circrna_finder <- circrna_finder[!duplicated(circrna_finder$vec),]
+
+dcc$vec <- as.factor(paste(dcc$chr, dcc$start, dcc$end, sep="-"))
+dcc <- dcc[!duplicated(dcc$vec),]
+
+find_circ$vec <- as.factor(paste(find_circ$chr, find_circ$start, find_circ$end, sep="-"))
+find_circ <- find_circ[!duplicated(find_circ$vec),]
+
+mapsplice$vec <- as.factor(paste(mapsplice$chr, mapsplice$start, mapsplice$end, sep="-"))
+mapsplice <- mapsplice[!duplicated(mapsplice$vec),]
+
+segemehl$vec <- as.factor(paste(segemehl$chr, segemehl$start, segemehl$end, sep="-"))
+segemehl <- segemehl[!duplicated(segemehl$vec),]
+
+#nf_circ$vec <- as.factor(paste(nf_circ$chr, nf_circ$start, nf_circ$end, sep="-"))
+#nf_circ <- nf_circ[!duplicated(nf_circ$vec),]
+
+result_list <- list()
+
+result_list$circexp <- as.character(circexp$vec)
+result_list$ciri <- as.character(ciri$vec)
+result_list$circrna_finder <- as.character(circrna_finder$vec)
+result_list$dcc <- as.character(dcc$vec)
+result_list$find_circ <- as.character(find_circ$vec)
+result_list$mapsplice <- as.character(mapsplice$vec)
+result_list$segemehl <- as.character(segemehl$vec)
+
+col_row <- c("circexp", "ciri", "circrna_finder", "dcc", "find_circ", "mapsplice", "segemehl")
+
+store_outputs <- data.frame(matrix(ncol=6, nrow = 1))
+colnames(store_outputs) <- c("Combination", "Detected", "True_Positive", "Precision", "Sensitivity", "F1")
+
+## set n_tools here, we can generate several results here :) fucking sweeeeet
+
+n_tools <- 4
+
+for(j in seq(from=1, to=6, by=1)){
+  
+  comb_mat <- combn(col_row, j)
+  
+  for(i in 1:ncol(comb_mat)){
+    
+    tools <- comb_mat[,i]
+    name <- paste(tools, collapse="=")
+    circs <- result_list[tools[1:j]]
+    # circs is a list, containing the results from each tool.
+    # if youre gonna apply tool_filter, do it here. 
+    if(j >= n_tools){
+      reduce <- unlist(circs)
+      tabulate <- table(reduce)
+      tool_filter <- names(tabulate)[tabulate >= n_tools]
+      circs <- unique(tool_filter)
+    }else{
+      circs <- unlist(circs)
+      circs <- unique(circs)
+    }
+    detected <- length(circs)
+    true_positive <- sum(circs %in% glio$vec)
+    precision <- (true_positive/detected)*100
+    sensitivity <- ((true_positive)/(true_positive + (7267 - true_positive))*100) #retard code 
+    f1 <- 2*(((precision)*(sensitivity))/((precision)+(sensitivity)))
+  
+    result_vec <- c(name, detected, true_positive, precision, sensitivity, f1)
+    result_df <- as.data.frame(t(result_vec))
+    colnames(result_df) <- c("Combination", "Detected", "True_Positive", "Precision", "Sensitivity", "F1")
+    store_outputs <- rbind(store_outputs, result_df)
+
+  }
+}
+
+# manually add all 7 'nf-core' to the dataframe to complete all 127 combos. 
+nf_core_res <- as.character(c("nf-core", "6997", "6985", "99.83", "96.12", "97.94"))
+nf_core_res_df <- as.data.frame(t(nf_core_res))
+colnames(nf_core_res_df) <- c("Combination", "Detected", "True_Positive", "Precision", "Sensitivity", "F1")
+
+store_outputs <- rbind(store_outputs, nf_core_res_df)
+
+store_outputs <- store_outputs[!duplicated(store_outputs$Combination),]
+store_outputs <- na.omit(store_outputs)
+rownames(store_outputs) <- store_outputs$Combination
+store_outputs <- subset(store_outputs, select=-c(Combination))
+# results are characters?
+
+
+# cool! 
+x <- as.data.frame(sapply(store_outputs, as.numeric))
+rownames(x) <- rownames(store_outputs)
+set_size <- as.character(count.fields(textConnection(rownames(x)), sep="="))
+x$set_size <- set_size
+
+# store those fuckers. 
+#tool_filter_0 <- x
+
+#tool_filter_2 <- x
+
+#tool_filter_3 <- x
+
+tool_filter_4 <- x
+
+
+### ok so, you want to show how tool_filter effects results. color by set size. 0 = include all. 2 = exclude set size 1. an so on n - 1 sorta thing. 
+
+a1<- ggline(tool_filter_0, x="set_size", y=c("Precision", "Sensitivity", "F1"), combine=T, fil="set_size", color="black", bxp.errorbar = T,  subtitle = "--tool_filter 1", add = "median_iqr", error.plot = "errorbar") + font("subtitle", face="italic")
+
+plot_2 <- subset(tool_filter_2, tool_filter_2$set_size > 1)
+
+a2 <- ggline(plot_2, x="set_size", y=c("Precision", "Sensitivity", "F1"), combine=T, fil="set_size", color="black", bxp.errorbar = T, subtitle = "--tool_filter 2", add = "mean_se") + font("subtitle", face="italic")
+
+plot_3 <- subset(tool_filter_3, tool_filter_3$set_size > 2)
+
+a3 <- ggline(plot_3, x="set_size", y=c("Precision", "Sensitivity", "F1"), combine=T, fil="set_size", color="black", bxp.errorbar = T, subtitle = "--tool_filter 3", add = "mean_se") + font("subtitle", face="italic")
+
+plot_4 <- subset(tool_filter_4, tool_filter_4$set_size > 3)
+
+a4 <- ggline(plot_4, x="set_size", y=c("Precision", "Sensitivity", "F1"), combine=T, fil="set_size", color="black", bxp.errorbar = T, subtitle = "--tool_filter 4", add = "mean_se") + font("subtitle", face="italic")
+
+
+ggarrange(a1,a2,a3,a4, labels=c("A", "B", "C", "D"), common.legend = T)
+
+
+tool_filter_0$filter = "1"
+plot_2$filter = "2"
+plot_3$filter = "3"
+plot_4$filter = "4"
+
+plot_mat <- rbind(tool_filter_0, plot_2, plot_3, plot_4)
+
+
+perf_met <- ggline(plot_mat, x="set_size", y=c("Precision", "Sensitivity", "F1"), combine = T, color = "filter", add = "mean_se", ylab = "", xlab = "# circRNA quantification tools included in combination", palette = "aaas", ggtheme = theme_bw(), legend = "top") + font("legend.text", face="bold") + font("legend.title", face="bold") + font("title", face="bold", size=16) + theme(plot.title = element_text(hjust = 0.5))
+
+perf_met <- ggpar(perf_met, legend.title = "--tool_filter:")
+
+plot(perf_met)
+
+Cairo::Cairo(
+  width =30, #width
+  height  = 15, #length
+  file = "/data/projects/circ_paper_results/sim_data/perf_mets.png",
+  type = "png", #tiff
+  bg = "white", #white or transparent depending on your requirement 
+  dpi = 300,
+  units = "cm" #you can change to pixels etc 
+)
+plot(perf_met)
+dev.off()
+
+```
+
+
+
+
+```{R}
+# complex stuff eh
+library(ComplexHeatmap)
+annotation_col = data.frame(Set_Size = set_size)
+
+x <- t(x)
+
+ha = HeatmapAnnotation(df = annotation_col, 
+                       col = list(Set_Size = c("1" = "#FF595E", 
+                                               "2" = "#FFCA3A",
+                                               "3" = "#8AC926",
+                                               "4" = "#1982C4",
+                                               "5" = "#6A4C93",
+                                               "6" = "cyan")),
+                                               #"7" = "violet")), 
+                       annotation_legend_param = list(title_gp = gpar(fontsize = 12, fontface = "italic"), 
+                                                      labels_gp = gpar(fontsize = 12)),
+                       annotation_label = "n tools",
+                       annotation_name_gp = gpar(fontface="italic"),
+                       annotation_name_side = "left",
+                       annotation_name_rot = 0,
+                       annotation_name_align = T)
+
+hab <- HeatmapAnnotation(True_Positives = anno_lines(cbind(x[1,], x[2,]),
+                                                   height = unit(3, "cm"),
+                                                   add_points = F,
+                                                   gp = gpar(col = c("black", "blue")),
+                                                   pt_gp = gpar(col = 1:2),
+                                                   pch = c(1,2),
+                                                   axis_param = c(side="right")),
+                         annotation_name_side = "left",
+                         annotation_label = "True Positives",
+                         annotation_name_rot = 0,
+                         annotation_name_align = T)
+
+
+
+hm <- Heatmap(
+              ## provide the gene expression matrix
+              x[3:5,], 
+              col= viridis::viridis(100, direction = -1),
+              ## Row annotation configurations
+              cluster_rows=FALSE,
+              show_row_dend=FALSE,
+              row_title_side="left",
+              row_title_gp=gpar(fontsize=8),
+              show_row_names=TRUE,
+              row_names_side="left",
+              
+              ## Column annotation configuratiions
+              cluster_columns=F,
+              show_column_dend=TRUE,
+              column_title="All poss combs",
+              column_title_side="top",
+              column_title_gp=gpar(fontsize=18, fontface="bold"),
+              show_column_names = FALSE,
+              column_names_gp = gpar(fontsize = 20, fontface="bold"),
+              
+              ## Dendrogram configurations: columns
+              clustering_distance_columns="euclidean",
+              clustering_method_columns="complete",
+              column_dend_height=unit(10,"mm"),
+              ## Dendrogram configurations: rows
+              clustering_distance_rows="euclidean",
+              clustering_method_rows="complete",
+              row_dend_width=unit(4,"cm"),
+              row_dend_side = "left",
+              row_dend_reorder = TRUE,
+              ## Splits
+              ## row_km/column_km refers to value for k 
+              ## when k-means clustering is performed
+              border=T,
+              #column_km = 20,
+              
+              ## plot params
+              width = unit(7, "inch"), 
+              height = unit(2, "inch"),
+              
+              ## if you have a small heatmap (less than 100 genes)
+              ## you might want to set show_row_names = T to show gene names
+              ## uncomment the code below to have the heatmap automatically resize to the 
+              ## number of genes in the heatmap
+              #height = unit(0.4, "cm")*nrow(mat),
+              
+              ## Annotations
+              ## provide annotations made using HeatmapAnnotations function
+              top_annotation = ha,
+              bottom_annotation = hab)
+
+ht1 <- draw(hm); decorate_annotation("True_Positives", {
+    grid.lines(c(0, 1), unit(c(7267, 7267), "native"), gp = gpar(lty = 2, col = "black", alpha = 0.8))
+})
+
+hm_order <- column_order(hm)
+```
+
+# next step is to get the column names from the dendogram, we can try to make a makeshift upset plot using a heatmap here. 
+
+```{R}
+dend_order <- column_order(hm)
+
+names <- colnames(x[,dend_order])
+
+# change the below index to change nf-core to individ tools
+names[127] <- "circexp=ciri=circrna_finder=find_circ=mapsplice=segemehl=dcc"
+names
+
+library(data.table)
+library(dplyr)
+library(tidyr)
+dt = data.table(id = dend_order, tools = names)
+binary_mat <- dt %>%
+  separate_rows(tools, sep = "=") %>%
+  table
+
+binary_mat <- as.matrix(t(binary_mat))
+
+ht2 <- Heatmap(binary_mat, 
+               cluster_columns = F, 
+               cluster_rows = F, 
+               row_names_side = "left", 
+               show_column_names = F, 
+               top_annotation = NULL, 
+               bottom_annotation = NULL, 
+               column_order = dend_order,
+               row_labels = c("CIRCexplorer2", "circRNA finder", "CIRIquant", "DCC", "find circ", "MapSplice", "Segemehl"),
+               col = c("white", "black"),
+               height = unit(2, "inch"))
+
+ht_list = hm %v% hab %v% ht2
+
+draw(ht_list); decorate_annotation("True_Positives", {
+    grid.lines(c(0, 1), unit(c(7267, 7267), "native"), gp = gpar(lty = 2, col = "black", alpha = 0.8))
+})
+
+
+## redo with n tools grouped together. 
+```
+# DCC poor performance plots below
+
+##!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+####################################
+
+```{R}
+library(ggpubr)
+
+meta <- tool_filter_0
+#meta <- subset(meta, meta$set_size >= 4)
+meta <- as.data.frame(meta[,3:5])
+meta <- as.data.frame(lapply(meta, as.numeric))
+rownames(meta) <- rownames(dataGG)
+meta$set_size <- as.character(count.fields(textConnection(rownames(meta)), sep="="))
+meta$set_size <- as.factor(meta$set_size)
+#meta$Outlier <- dataGG$Outlier
+meta$DCC <- as.factor(grepl("dcc", rownames(meta)))
+meta$DCC <- as.factor(ifelse(meta$DCC == TRUE, "Yes", "No"))
+
+
+p <- ggboxplot(meta, x="DCC", y=c("Precision", "Sensitivity", "F1"), combine=T, fill = "DCC", bxp.errorbar = T, ylab = "", xlab = "", palette = c("dodgerblue4", "darkorange2"), legend.title = "Analysis included DCC: ", legend="top") + ylim(60,103) + stat_compare_means(label = "p.format", label.x = 1.27, label.y = 102, hide.ns = T) + theme(legend.title = element_text(size = 12))
+
+box_plot <- p + rremove("x.ticks") + rremove("x.text")
+
+plot(box_plot)
+
+# write to csv
+#colnames(meta[5]) <- "Outlier"
+#write.csv(meta, "/data/projects/circ_paper_results/supplementary/filt_1.csv", quote=F, sep=",", row.names = T)
+```
+
+# same butpca? 
+
+```{R}
+meta <- tool_filter_0
+meta <- as.data.frame(meta[,3:5])
+meta <- as.data.frame(lapply(meta, as.numeric))
+rownames(meta) <- rownames(tool_filter_0)
+meta$set_size <- as.factor(tool_filter_0$set_size)
+meta$DCC <- as.factor(grepl("dcc", rownames(meta)))
+meta$DCC <- as.factor(ifelse(meta$DCC == TRUE, "Yes", "No"))
+
+PCA <- prcomp(meta[,1:3], scale=F, center = T)
+
+percentVar <- round(100*PCA$sdev^2/sum(PCA$sdev^2),1)
+sd_ratio <- sqrt(percentVar[2] / percentVar[1])
+
+dataGG <- data.frame(PC1 = PCA$x[,1], PC2 = PCA$x[,2],
+                    DCC = meta$DCC)
+
+# Extract loadings of the variables
+PCAloadings <- data.frame(Variables = rownames(PCA$rotation), PCA$rotation)
+
+p1 <- ggpubr::ggscatter(dataGG, x="PC1", y="PC2",
+                  color = "DCC", palette = c("dodgerblue4", "darkorange2"),
+                  title = "PCA Plot",
+                  xlab = paste0("PC1, VarExp: ", percentVar[1], "%"),
+                  ylab = paste0("PC2, VarExp: ", percentVar[2], "%"),
+                  legend.title = "Analysis included DCC: ", legend="top",
+                  ellipse = TRUE, star.plot = T, ggtheme = theme_bw()) + font("title", face="italic") +
+                  theme(plot.title = element_text(hjust = 0.0)) + 
+                  geom_segment(data = PCAloadings, aes(x = 0, y = 0, xend = (PC1*4),
+                  yend = (PC2*5)), arrow = arrow(length = unit(1/2, "picas")),
+                  color = "black") + 
+                  annotate("text", x = (PCAloadings$PC1*7), y = (PCAloadings$PC2*7), label = PCAloadings$Variables)
+
+#p1 <- p1 + rremove("legend")
+plot(p1)
+
+```
+
+# pca tool filt 2
+
+```{R}
+meta <- plot_2
+meta <- as.data.frame(meta[,3:5])
+meta <- as.data.frame(lapply(meta, as.numeric))
+rownames(meta) <- rownames(plot_2)
+meta$set_size <- as.factor(plot_2$set_size)
+meta$SEGEMEHL <- as.factor(grepl("segemehl", rownames(meta)))
+meta$SEGEMEHL <- as.factor(ifelse(meta$SEGEMEHL == TRUE, "Yes", "No"))
+
+PCA <- prcomp(meta[,1:3], scale=F, center = T)
+
+percentVar <- round(100*PCA$sdev^2/sum(PCA$sdev^2),1)
+sd_ratio <- sqrt(percentVar[2] / percentVar[1])
+
+dataGG <- data.frame(PC1 = PCA$x[,1], PC2 = PCA$x[,2],
+                    Segemehl = meta$SEGEMEHL, set_size = meta$set_size)
+
+dataGG$Outlier <- ifelse(dataGG$PC1 < -33, "Yes", "No")
+
+# Extract loadings of the variables
+PCAloadings <- data.frame(Variables = rownames(PCA$rotation), PCA$rotation)
+
+p2 <- ggpubr::ggscatter(dataGG, x="PC1", y="PC2",
+                  color = "Outlier", palette = c("dodgerblue4", "darkorange2"),
+                  title = "PCA Plot",
+                  xlab = paste0("PC1, VarExp: ", percentVar[1], "%"),
+                  ylab = paste0("PC2, VarExp: ", percentVar[2], "%"),
+                  ellipse = TRUE, star.plot = T, ggtheme = theme_bw()) + font("title", face="italic") +
+                  theme(plot.title = element_text(hjust = 0.0)) + 
+                  geom_segment(data = PCAloadings, aes(x = 0, y = 0, xend = (PC1*6),
+                  yend = (PC2*5)), arrow = arrow(length = unit(1/2, "picas")),
+                  color = "black") + 
+                  annotate("text", x = (PCAloadings$PC1*4), y = (PCAloadings$PC2*5.4),
+                  label = PCAloadings$Variables)
+
+#p2<- p2 + rremove("legend")
+
+plot(p2)
+
+#write to csv
+#meta$Outlier <- dataGG$label
+#meta <- subset(meta, select=-c(SEGEMEHL))
+
+#write.csv(meta, "/data/projects/circ_paper_results/supplementary/filt_2.csv", quote=F, sep=",", row.names = T)
+```
+
+
+```{R}
+meta <- plot_3
+meta <- as.data.frame(meta[,3:5])
+meta <- as.data.frame(lapply(meta, as.numeric))
+rownames(meta) <- rownames(plot_3)
+meta$set_size <- as.factor(plot_3$set_size)
+meta$SEGEMEHL <- as.factor(grepl("segemehl", rownames(meta)))
+meta$SEGEMEHL <- as.factor(ifelse(meta$SEGEMEHL == TRUE, "Yes", "No"))
+
+PCA <- prcomp(meta[,1:3], scale=F, center = T)
+
+percentVar <- round(100*PCA$sdev^2/sum(PCA$sdev^2),1)
+sd_ratio <- sqrt(percentVar[2] / percentVar[1])
+
+dataGG <- data.frame(PC1 = PCA$x[,1], PC2 = PCA$x[,2],
+                    Segemehl = meta$SEGEMEHL, set_size = meta$set_size)
+
+dataGG$Outlier <- ifelse(dataGG$PC1 > 20, "Yes", "No")
+
+# Extract loadings of the variables
+PCAloadings <- data.frame(Variables = rownames(PCA$rotation), PCA$rotation)
+
+p3 <- ggpubr::ggscatter(dataGG, x="PC1", y="PC2",
+                  color = "Outlier", palette = c("dodgerblue4", "darkorange2"),
+                  title = "PCA Plot",
+                  xlab = paste0("PC1, VarExp: ", percentVar[1], "%"),
+                  ylab = paste0("PC2, VarExp: ", percentVar[2], "%"),
+                  ellipse = T, star.plot = T, ellipse.type = "t", ggtheme = theme_bw()) +
+                  font("title", face="italic") +
+                  theme(plot.title = element_text(hjust = 0.0)) + 
+                  geom_segment(data = PCAloadings, aes(x = 0, y = 0, xend = (PC1*6),
+                  yend = (PC2*5)), arrow = arrow(length = unit(1/2, "picas")),
+                  color = "black") + 
+                  annotate("text", x = (PCAloadings$PC1*4), y = (PCAloadings$PC2*5.4),
+                  label = PCAloadings$Variables)
+
+#p3 <- p3 + rremove("legend")
+
+plot(p3)
+
+# writecsv
+write.csv(meta, "/data/projects/circ_paper_results/supplementary/filt_3.csv", quote=F, row.names = T)
+```
+
+```{R}
+meta <- plot_4
+meta <- as.data.frame(meta[,3:5])
+meta <- as.data.frame(lapply(meta, as.numeric))
+rownames(meta) <- rownames(plot_4)
+meta$set_size <- as.factor(plot_4$set_size)
+meta$SEGEMEHL <- as.factor(grepl("segemehl", rownames(meta)))
+meta$SEGEMEHL <- as.factor(ifelse(meta$SEGEMEHL == TRUE, "Yes", "No"))
+
+PCA <- prcomp(meta[,1:3], scale=F, center = T)
+
+percentVar <- round(100*PCA$sdev^2/sum(PCA$sdev^2),1)
+sd_ratio <- sqrt(percentVar[2] / percentVar[1])
+
+dataGG <- data.frame(PC1 = PCA$x[,1], PC2 = PCA$x[,2],
+                    Segemehl = meta$SEGEMEHL, set_size = meta$set_size)
+dataGG$Outlier <- ifelse(dataGG$PC1 > 15, "Yes", "No")
+# Extract loadings of the variables
+PCAloadings <- data.frame(Variables = rownames(PCA$rotation), PCA$rotation)
+
+p4 <- ggpubr::ggscatter(dataGG, x="PC1", y="PC2",
+                  color = "Outlier", palette = c("dodgerblue4", "darkorange2", "purple"),
+                  title = "PCA Plot",
+                  xlab = paste0("PC1, VarExp: ", percentVar[1], "%"),
+                  ylab = paste0("PC2, VarExp: ", percentVar[2], "%"),
+                  ellipse = TRUE, star.plot = T, ggtheme = theme_bw()) +
+                  font("title", face="italic") +
+                  theme(legend.title = element_text("Analysis included Segemehl: ")) +
+                  theme(legend.position = "top") + 
+                  theme(plot.title = element_text(hjust = 0.0)) + 
+                  geom_segment(data = PCAloadings, aes(x = 0, y = 0, xend = (PC1*6),
+                  yend = (PC2*5)), arrow = arrow(length = unit(1/2, "picas")),
+                  color = "black") + 
+                  annotate("text", x = (PCAloadings$PC1*4), y = (PCAloadings$PC2*5.4),
+                  label = PCAloadings$Variables)
+
+p4 <- p4 + rremove("legend")
+
+plot(p4)
+```
+
+
+#hmm
+
+```{R}
+
+top_layer <- ggarrange(p1,p2, nrow=1, ncol=2, align = "h")
+plot(top_layer)
+
+top_layer_header <- annotate_figure(top_layer, top = text_grob("PCA plots to identify weak tools", color = "black", face = "bold", size = 16))
+plot(top_layer_header)
+
+bottom_layer <- ggarrange(p3, p4, nrow=1, ncol=2, align="h")
+
+
+Cairo::Cairo(
+  width =30, #width
+  height  = 25, #length
+  file = "/data/projects/circ_paper_results/sim_data/combn_stats.png",
+  type = "png", #tiff
+  bg = "white", #white or transparent depending on your requirement 
+  dpi = 300,
+  units = "cm" #you can change to pixels etc 
+)
+ggarrange(p, ggarrange(top_layer_header, bottom_layer, nrow=2, ncol=1 ), nrow=2, align="v")
+dev.off()
+
+```
+
+
+```{R}
+library(cowplot)
+library(ggpubr)
+
+bottom_layer <- ggarrange(p, p1, common.legend = T, legend= "bottom", labels = c("B", "C"))
+bottom_layer_text_plot <- annotate_figure(bottom_layer, top = text_grob(" ", color = "black", face = "bold", size = 14))
+#plot(bottom_layer_text_plot)
+ggarrange(perf_met, bottom_layer_text_plot, ncol=1, nrow=2, common.legend = F, align = "v", legend = "top", labels = c("A"))
+
+filt_1_plots <- bottom_layer_text_plot
+plot(filt_1_plots)
+
+filt_2_plots <- bottom_layer_text_plot
+plot(filt_2_plots)
+
+filt_3_plots <- bottom_layer_text_plot
+plot(filt_3_plots)
+
+filt_4_plots <- bottom_layer_text_plot
+plot(filt_4_plots)
+
+
+
+Cairo::Cairo(
+  width =25, #width
+  height  = 30, #length
+  file = "/data/projects/circ_paper_results/supplementary/supp_metrics.png",
+  type = "png", #tiff
+  bg = "white", #white or transparent depending on your requirement 
+  dpi = 300,
+  units = "cm" #you can change to pixels etc 
+)
+#cowplot::plot_grid(box_plot, pca_plot, nrow = 1, ncol = 2, labels = c("A", "B"))
+ggarrange(filt_1_plots, filt_2_plots, filt_3_plots, filt_4_plots, nrow=4, ncol=1, common.legend = T)
+dev.off()
+
+
+
+
+
+
+png(filename="/data/projects/circ_paper_results/sim_data/dcc_drop_performance.png", width=700, height=1000, pointsize = 15)
+cowplot::plot_grid(box_plot, pca_plot, nrow = 2, ncol = 1, labels = c("A", "B"))
+dev.off()
+
+
+Cairo::Cairo(
+  width =26, #width
+  height  = 20, #length
+  file = "/data/projects/circ_paper_results/sim_data/perf_met_and_dcc.png",
+  type = "png", #tiff
+  bg = "white", #white or transparent depending on your requirement 
+  dpi = 300,
+  units = "cm" #you can change to pixels etc 
+)
+#cowplot::plot_grid(box_plot, pca_plot, nrow = 1, ncol = 2, labels = c("A", "B"))
+ggarrange(perf_met, bottom_layer_text_plot, ncol=1, nrow=2, common.legend = F, align = "v", legend = "top", labels = c("A"))
+dev.off()
+```
+
+```{R}
+annot_for_hm <- data.frame(DCC = meta$DCC)
+
+row.names(annot_for_hm) <- rownames(meta)
+
+dists <- as.matrix(dist(meta[,1:3], method = "manhattan"))
+
+rownames(dists) <- row.names(meta)
+hmcol <- rev(colorRampPalette(RColorBrewer::brewer.pal(9, "YlOrRd"))(255))
+colnames(dists) <- NULL
+diag(dists) <- NA
+
+ann_colors <- list(
+  DCC = c(Yes = "black", No = "forestgreen"))
+
+pheatmap(dists, col = (hmcol), 
+         annotation_row = annot_for_hm,
+         annotation_colors = ann_colors,
+         legend = TRUE, 
+         show_rownames = FALSE,
+         treeheight_row = 0,
+         legend_breaks = c(min(dists, na.rm = TRUE), 
+                         max(dists, na.rm = TRUE)), 
+         legend_labels = (c("small distance", "large distance")),
+         main = "Clustering heatmap RMA normalised samples")
+
+
+```
+
+
+# upset stuff
+
+```{R}
+# read in the bsj 2 read files above and use the 'vec' columns for set analysis
+
+# run cvhunks to generate stats (for loop) but dont include nf-core in it as it is not representative of a 7 tool union (it has a lot of filters). 
+
+venn_list <- list(CIRCexplorer2=unique(circexp$vec),
+                  circRNA_finder=unique(circrna_finder$vec),
+                  CIRIquant=unique(ciri$vec),
+                  DCC=unique(dcc$vec),
+                  find_circ=unique(find_circ$vec),
+                  MapSplice=unique(mapsplice$vec),
+                  Segemehl=unique(segemehl$vec))
+
+univ_set <- glio$vec
+
+m = make_comb_mat(venn_list, mode = "union", universal_set = univ_set)
+
+up <- UpSet(m)
+draw(up)
+up_order <- column_order(up)
+
+# 2 extra cols, with 7 tools and 0 tools. remove these. 
+# 1st and last elements, respectively. 
+m <- m[,-128]
+m <- m[,-1]
+dim(m)
+
+up <- UpSet(m, comb_order = hm_order)
+draw(up)
+up_order <- column_order(up)
+```
+
+```{R}
+foo <- as.data.frame(t(x))
+ggpubr::ggline(foo, x="Detected", numeric.x.axis = T)
+
+```
+
+
+
+```{R}
+# kept timing out for me, you just have to re-run code.. 
+
+library(biomaRt)
+
+mart <- useMart("ensembl", archive = FALSE)
+
+# view and choose dataset
+listDatasets(mart)
+
+hsa_mart <- useMart("ensembl", dataset = "hsapiens_gene_ensembl")
+
+mmu_mart <- useMart("ensembl", dataset = "mmusculus_gene_ensembl")
+
+# view attributes
+listAttributes(mmu_mart)
+
+# here we just create a databse - there is no key value provided to the function
+human_genes <-  getBM(attributes = c("ensembl_gene_id", "ensembl_gene_id_version", "external_gene_name", "hgnc_symbol", "gene_biotype"),
+                     mart = hsa_mart)
+
+mouse_genes <- getBM(attributes = c("ensembl_gene_id", "ensembl_gene_id_version", "external_gene_name", "hgnc_symbol", "gene_biotype"),
+                     mart = mmu_mart)
+
+# your example with 'b' dataframe. lets pretend it has only 8,000 rows
+set.seed(1223)
+b <- data.frame(matrix(nrow=8000, ncol=5))
+rownames(b) <- sample(human_genes$ensembl_gene_id, 8000)
+
+# this time we will only pull information for the 8000 in the dataframe
+
+df_info <- getBM(attributes = c("ensembl_gene_id", "external_gene_name", "gene_biotype"),
+                 values = rownames(b),
+                 filters = "ensembl_gene_id", # <-  your rownames are ensembl_gene_id.. 
+                 mart = hsa_mart)
+
+# Create a vector with some mouse genes
+musGenes <- c("ENSMUSG00000064357", "ENSMUSG00000064360", "ENSMUSG00000064345",
+              "ENSMUSG00000064341", "ENSMUSG00000064356", "ENSMUSG00000064367")
+
+# use getLDS() to retrieve the human data linked to the mouse and store them in a new dataframe
+humanisedGenes <- getLDS(attributes = c("ensembl_gene_id"), 
+                 filters = "ensembl_gene_id", values = musGenes , 
+                 mart = mmu_mart, attributesL = c("ensembl_gene_id", "hgnc_symbol"), 
+                 martL = hsa_mart, uniqueRows=T)
+
+humanisedGenes
+
+```
+
+# PHRESH GLIO dataset analysis
+
+wut wut?
+
+Remove the sign from the circrnas and go again. 
+
+```{R}
+path = "/data/projects/circ_paper_results/glio_data/rnase_minus/filt/factor_analysis/"
+glob = "glioblastoma_RNase_minus_"
+
+# rnase minus
+CE_M <- read.table(paste(path, glob, "circexplorer2_factor.bed", sep=""))
+CE_M <- unique(sub('^([^:]+:[^:]+).*', '\\1', CE_M$V1))
+CF_M <- read.table(paste(path, glob, "circrna_finder_factor.bed", sep=""))
+CF_M <- unique(sub('^([^:]+:[^:]+).*', '\\1', CF_M$V1))
+CI_M <- read.table(paste(path, glob, "ciriquant_factor.bed", sep=""))
+CI_M <- unique(sub('^([^:]+:[^:]+).*', '\\1', CI_M$V1))
+DC_M <- read.table(paste(path, glob, "dcc_factor.bed", sep=""))
+DC_M <- unique(sub('^([^:]+:[^:]+).*', '\\1', DC_M$V1))
+FC_M <- read.table(paste(path, glob, "find_circ_factor.bed", sep=""))
+FC_M <- unique(sub('^([^:]+:[^:]+).*', '\\1', FC_M$V1))
+MS_M <- read.table(paste(path, glob, "mapsplice_factor.bed", sep=""))
+MS_M <- unique(sub('^([^:]+:[^:]+).*', '\\1', MS_M$V1))
+SG_M <- read.table(paste(path, glob, "segemehl_factor.bed", sep=""))
+SG_M <- unique(sub('^([^:]+:[^:]+).*', '\\1', SG_M$V1))
+
+path = "/data/projects/circ_paper_results/glio_data/rnase_plus/filt/factor_analysis/"
+glob = "glioblastoma_RNase_plus_"
+
+CE_P <- read.table(paste(path, glob, "circexplorer2_factor.bed", sep=""))
+CE_P <- unique(sub('^([^:]+:[^:]+).*', '\\1', CE_P$V1))
+CF_P <- read.table(paste(path, glob, "circrna_finder_factor.bed", sep=""))
+CF_P <- unique(sub('^([^:]+:[^:]+).*', '\\1', CF_P$V1))
+CI_P <- read.table(paste(path, glob, "ciriquant_factor.bed", sep=""))
+CI_P <- unique(sub('^([^:]+:[^:]+).*', '\\1', CI_P$V1))
+DC_P <- read.table(paste(path, glob, "dcc_factor.bed", sep=""))
+DC_P <- unique(sub('^([^:]+:[^:]+).*', '\\1', DC_P$V1))
+FC_P <- read.table(paste(path, glob, "find_circ_factor.bed", sep=""))
+FC_P <- unique(sub('^([^:]+:[^:]+).*', '\\1', FC_P$V1))
+MS_P <- read.table(paste(path, glob, "mapsplice_factor.bed", sep=""))
+MS_P <- unique(sub('^([^:]+:[^:]+).*', '\\1', MS_P$V1))
+SG_P <- read.table(paste(path, glob, "segemehl_factor.bed", sep=""))
+SG_P <- unique(sub('^([^:]+:[^:]+).*', '\\1', SG_P$V1))
+
+# sure you want to remove sign for set analysis? this is for your table. prop comm im not sure... YES YOU REMOVED SIGNS
+CE_union <- intersect(CE_M, CE_P)
+CF_union <- intersect(CF_M, CF_P)
+CI_union <- intersect(CI_M, CI_P)
+DC_union <- intersect(DC_M, DC_P)
+FC_union <- intersect(FC_M, FC_P)
+MS_union <- intersect(MS_M, MS_P)
+SG_union <- intersect(SG_M, SG_P)
+
+result_list <- list()
+result_list$circexp <- CE_union
+result_list$ciri <- CI_union
+result_list$circrna <- CF_union
+result_list$dcc <- DC_union
+result_list$find_circ <- FC_union
+result_list$mapsplice <- MS_union
+result_list$segemehl <- SG_union
+
+NF_all <- unlist(list(CE_union, CI_union, CF_union, DC_union, FC_union, MS_union, SG_union))
+tabulate <- table(NF_all)
+NF_1 <- names(tabulate)[tabulate >= 1]
+NF_1 <- unique(NF_1)
+NF_2 <- names(tabulate)[tabulate >= 2]
+NF_2 <- unique(NF_2)
+NF_3 <- names(tabulate)[tabulate >= 3]
+NF_3 <- unique(NF_3)
+NF_4 <- names(tabulate)[tabulate >= 4]
+NF_4 <- unique(NF_4)
+NF_5 <- names(tabulate)[tabulate >= 5]
+NF_5 <- unique(NF_5)
+NF_6 <- names(tabulate)[tabulate >= 6]
+NF_6 <- unique(NF_6)
+NF_7 <- names(tabulate)[tabulate >= 7]
+NF_7 <- unique(NF_7)
+
+NF_list <- list(NF_1, NF_2, NF_3, NF_4, NF_5, NF_6, NF_7)
+```
+
+## prop comm heatmap
+do i want to show nf-core circrna here for prop comm? no not for real dataset
+
+```{R}
+
+# make nf-core for simu data yourself. i don ttrust the matrix you made. go to lines 900 to read in shit
+nf_all <- unlist(venn_list)
+tabulate <- table(nf_all)
+nf_core <- names(tabulate)[tabulate >= 2]
+
+venn_list$nf_core <- nf_core
+
+## init empty df 
+out_df <- data.frame(matrix(nrow=8,ncol=8))
+
+## function for prop comm circrnas between i,j
+prop_comm <- function(i,j){
+  ## common circs in i,j
+  c_i_j <- sum(i %in% j)
+  ## proportion of circs in i vs j             
+  p_i_j <- c_i_j/length(i)
+  return(p_i_j)
+}
+
+## loop over tool to create vector of results, append to row of df. 
+
+for(it in seq(from=1, to=8, by=1)){
+  i <- it
+  vec <- c()
+  for(id in seq(from=1, to=8, by=1)){
+    j <- id
+    i_v <- venn_list[[i]]
+    j_v <- venn_list[[j]]
+    p_i_j <- prop_comm(i_v,j_v)
+    vec <- c(vec, p_i_j)
+  }
+  out_df[i,] <- vec
+}
+
+col_row <- c("CIRCexplorer2", "CIRIquant", "circRNA_Finder", "DCC", "find_circ", "MapSplice", "Segemehl", "nf-core/circrna")
+colnames(out_df) <- col_row
+rownames(out_df) <- col_row
+
+library(ComplexHeatmap)
+
+
+prop_heat<- Heatmap(t(out_df), cluster_rows = F, cluster_columns = F, 
+        col = hcl.colors(100,"gnbu",rev=F), show_heatmap_legend = F,
+        row_names_side = "left", column_names_rot = 45, 
+        width = ncol(out_df)*unit(2.5, "cm"), 
+        height = nrow(out_df)*unit(1.5, "cm"),
+        row_order = c(8,7,6,5,4,3,2,1),
+        row_names_gp = gpar(fontsize=14),
+        column_names_gp = gpar(fontsize=14),
+        border = T, column_title_gp = gpar(fontface="bold", fontsize=16),
+        cell_fun = function(j, i, x, y, width, height, fill){
+        grid.text(sprintf("%.2f", t(out_df)[i, j]), x, y, gp = gpar(fontsize = 12))}, 
+        rect_gp = gpar(col = "black", lwd = 1))
+
+## prop comm simu on its own, wider.
+Cairo::Cairo(
+  27, #length
+  17, #width
+  file = "/data/projects/circ_paper_results/plots/sim_prop_comm_wide.png",
+  type = "png", #tiff
+  bg = "white", #white or transparent depending on your requirement 
+  dpi = 300,
+  units = "cm" #you can change to pixels etc 
+)
+draw(prop_heat)
+dev.off()
+
+#hpw about jaccard for matrix
+jaccard <- function(a, b) {
+    intersection = length(intersect(a, b))
+    union = length(a) + length(b) - intersection
+    return (intersection/union)
+}
+
+jacc_df <- data.frame(matrix(nrow=8,ncol=8))
+
+for(it in seq(from=1, to=8, by=1)){
+  i <- it
+  vec <- c()
+  for(id in seq(from=1, to=8, by=1)){
+    j <- id
+    i_v <- result_list[[i]]
+    j_v <- result_list[[j]]
+    p_i_j <- jaccard(i_v,j_v)
+    vec <- c(vec, p_i_j)
+  }
+  jacc_df[i,] <- vec
+}
+
+colnames(jacc_df) <- col_row
+rownames(jacc_df) <- col_row
+
+jacc_heat <- Heatmap(jacc_df, cluster_rows = F, cluster_columns = F, 
+        col = hcl.colors(100,"gnbu",rev=F), show_heatmap_legend = F,
+        row_names_side = "left", column_names_rot = 45, 
+        column_title = "Jaccard Similarity Index",
+        width = ncol(out_df)*unit(1.5, "cm"), 
+        height = nrow(out_df)*unit(1.5, "cm"),
+        row_order = c(8,7,6,5,4,3,2,1),
+        border = T, column_title_gp = gpar(fontface="bold", fontsize=14),
+        cell_fun = function(j, i, x, y, width, height, fill){
+        grid.text(sprintf("%.2f", jacc_df[i, j]), x, y, gp = gpar(fontsize = 10))}, 
+        rect_gp = gpar(col = "black", lwd = 1))
+
+
+library(grid)
+library(cowplot)
+
+p1 = grid.grabExpr(draw(prop_heat))
+p2 = grid.grabExpr(draw(jacc_heat))
+Cairo::Cairo(
+  35, #length
+  20, #width
+  file = "/data/projects/circ_paper_results/plots/sim_dat_heat.png",
+  type = "png", #tiff
+  bg = "white", #white or transparent depending on your requirement 
+  dpi = 300,
+  units = "cm" #you can change to pixels etc 
+)
+plot_grid(p1,p2, nrow=1, ncol=2, align="h", labels=c("A","B"))
+dev.off()
+```
+
+## recreate the computational stats. 
+
+```{R}
+RAM <- data.frame("Segemehl" = c(50.7, 51.2), "DCC" = c(97.02, 130.2), "CIRIquant" = c(74.1, 76), "find_circ" = c(44.0, 45.0), "MapSplice" = c(5.50, 7.40), "circRNA_finder" = c(63.72, 63.22), "CIRCexplorer2" = c(63.02, 63.02))
+
+RT <- data.frame("Segemehl" = c(294,373), "DCC" = c(276, 1018), "CIRIquant" = c(165, 176), "find_circ" = c(462, 283), "MapSplice" = c(1510, 876), "circRNA_finder" = c(116, 296), "CIRCexplorer2" = c(116, 297))
+
+Disk <- data.frame("Segemehl" = c(79.10,84.40), "DCC" = c(299.75, 568.81), "CIRIquant" = c(572,531), "find_circ" = c(94.3, 140.7), "MapSplice" = c(559,430), "circRNA_finder" = c(197.15, 275.11), "CIRCexplorer2" = c(198.75, 277.61))
+
+## REAL FORMAT :) 
+
+RT <- RT[, c("CIRCexplorer2", "circRNA_finder", "CIRIquant", "DCC", "find_circ", "MapSplice", "Segemehl")]
+RAM <- RAM[, c("CIRCexplorer2", "circRNA_finder", "CIRIquant", "DCC", "find_circ", "MapSplice", "Segemehl")]
+Disk <- Disk[, c("CIRCexplorer2", "circRNA_finder", "CIRIquant", "DCC", "find_circ", "MapSplice", "Segemehl")]
+
+
+
+# reformate for ggploooot compatability
+Time_long <- tidyr::gather(RT, V1, V2)
+Time_long$stat <- "Run Time (minutes)"
+RAM_long <- tidyr::gather(RAM, V1, V2)
+RAM_long$stat <- "RAM (GB)"
+Disk_long <- tidyr::gather(Disk, V1, V2)
+Disk_long$stat <- "Write I/O (GB)"
+
+mat <- rbind(Time_long, RAM_long, Disk_long)
+
+n_true <- data.frame(V1=c("CIRCexplorer2", "circRNA_finder","CIRIquant","DCC","find_circ", "MapSplice", "Segemehl"), V2=c(2955,3251,5314,5951,4089,3471,4554))
+n_true$stat <- "# True circRNAs Detected"
+
+ram_pl <- ggboxplot(RAM_long, x="V1", y="V2", fill="V1", ylab = "RAM (GB)", xlab="", bxp.errorbar = T, ggtheme=theme_classic()) + rotate_x_text(angle = 45)
+
+ram_mod <- ggpar(ram_pl, font.xtickslab = c("bold"))
+
+time_pl <- ggboxplot(Time_long, x="V1", y="V2", fill="V1", ylab = "Time (minutes)", xlab="", bxp.errorbar = T, ggtheme=theme_classic()) + rremove("x.text") + rremove("x.ticks")
+
+disk_pl <- ggboxplot(Disk_long, x="V1", y="V2", fill="V1", ylab = "Write I/O (GB)", xlab="", bxp.errorbar = T, ggtheme=theme_classic()) + rotate_x_text(angle = 45) 
+
+disk_mod <- ggpar(disk_pl, font.xtickslab = c("bold"))
+
+detected_pl <- ggbarplot(n_true, x="V1", y="V2", fill="V1", ylab="# true circRNA Detected", xlab="", ggtheme=theme_classic())
+
+#lab meeting
+ggbarplot(n_true, x="V1", y="V2", fill="V1", ylab="# true circRNA Detected", xlab="", ggtheme=theme_classic(), legend="none", label=T, lab.pos = "out")
+
+
+detected_mod <- ggpar(detected_pl, legend.title = "Tool: ") + rremove("x.text") + rremove("x.ticks")
+
+plot <- ggarrange(detected_mod, time_pl, disk_mod, ram_mod, ncol=2, nrow=2, common.legend = T, align = "v", widths = c(1,1), heights = c(1,1.5), labels = c("A", "B", "C", "D"), vjust = 0.5, legend = "top")
+
+plot(detected_pl)
+
+Cairo::Cairo(
+  30, #length
+  20, #width
+  file = "/data/projects/circ_paper_results/plots/glio_stats.png",
+  type = "png", #tiff
+  bg = "white", #white or transparent depending on your requirement 
+  dpi = 300,
+  units = "cm" #you can change to pixels etc 
+)
+plot(plot)
+dev.off()
+```
+
+# plots for glioblastoma dataset
+strategy here is to see the proportion of circrnas tool filter 1 , 2 , 3 and 4 each tool contributes towards. 
+```{R}
+
+# copde lines ~2000 to read in data, use results_list NOT venn_list
+
+prop_comm <- function(i,j){
+    c_i_j <- sum(i %in% j)
+    p_i_j <- c_i_j/length(i)
+    return(p_i_j)
+}
+
+jaccard <- function(a, b) {
+    intersection = length(intersect(a, b))
+    union = length(a) + length(b) - intersection
+    return (intersection/union)
+}
+
+## loop over tool to create vector of results, append to row of df. 
+out_df <- data.frame(matrix(nrow=7,ncol=7))
+
+# prop comm
+for(it in seq(from=1, to=7, by=1)){
+  i <- it
+  i_v <- result_list[[i]]
+  vec <- c()
+  for(id in seq(from=1, to=7, by=1)){
+    j <- id
+    j_v <- result_list[[j]]
+    prop <- prop_comm(j_v, i_v)
+    vec <- c(vec, prop)
+  }
+  out_df[,i] <- vec
+}
+
+col_row <- c("CIRCexplorer2", "CIRIquant", "circRNA_Finder", "DCC", "find_circ", "MapSplice", "Segemehl")
+#colnames(out_df) <- c("1", "2", "3", "4", "5", "6", "7")
+colnames(out_df) <- col_row
+rownames(out_df) <- col_row
+prop_df <- out_df
+
+
+# jaccard
+out_df <- data.frame(matrix(nrow=7,ncol=7))
+for(it in seq(from=1, to=7, by=1)){
+  i <- it
+  i_v <- result_list[[i]]
+  vec <- c()
+  for(id in seq(from=1, to=7, by=1)){
+    j <- id
+    j_v <- result_list[[j]]
+    jacc <- jaccard(j_v, i_v)
+    vec <- c(vec, jacc)
+  }
+  out_df[,i] <- vec
+}
+
+#col_row <- c("CIRCexplorer2", "CIRIquant", "circRNA_Finder", "DCC", "find_circ", "MapSplice", "Segemehl")
+#colnames(out_df) <- c("1", "2", "3", "4", "5", "6", "7")
+#colnames(out_df) <- col_row
+#rownames(out_df) <- col_row
+#jacc_df <- out_df
+
+# switch to iterate over tool filter params
+out_df <- data.frame(matrix(nrow=7,ncol=7))
+for(it in seq(from=1, to=7, by=1)){
+  i <- it
+  i_v <- NF_list[[i]]
+  vec <- c()
+  for(id in seq(from=1, to=7, by=1)){
+    j <- id
+    j_v <- result_list[[j]]
+    jacc <- jaccard(j_v, i_v)
+    vec <- c(vec, jacc)
+  }
+  out_df[,i] <- vec
+}
+
+col_row <- c("CIRCexplorer2", "CIRIquant", "circRNA_Finder", "DCC", "find_circ", "MapSplice", "Segemehl")
+colnames(out_df) <- c("n=1", "n=2", "n=3", "n=4", "n=5", "n=6", "n=7")
+rownames(out_df) <- col_row
+jacc_iter <- out_df
+
+prop_df_t <- t(prop_df)
+
+prop_heat <- Heatmap(prop_df_t, cluster_rows = F, cluster_columns = F, 
+        col = hcl.colors(100,"gnbu",rev=F), show_heatmap_legend = F,
+        row_names_side = "left", column_names_rot = 45, 
+        #column_title = "Proportion Common Candidates Real Dataset\n",
+        width = ncol(out_df)*unit(1.5, "cm"), 
+        height = nrow(out_df)*unit(1.5, "cm"),
+        row_order = c(7,6,5,4,3,2,1),
+        border = T, column_title_gp = gpar(fontface="bold", fontsize=14),
+        cell_fun = function(j, i, x, y, width, height, fill){
+        grid.text(sprintf("%.2f", prop_df_t[i, j]), x, y, gp = gpar(fontsize = 10))}, 
+        rect_gp = gpar(col = "black", lwd = 1))
+
+Cairo::Cairo(
+  15, #length
+  15, #width
+  file = "/data/projects/circ_paper_results/plots/real_prop_comm.png",
+  type = "png", #tiff
+  bg = "white", #white or transparent depending on your requirement 
+  dpi = 300,
+  units = "cm" #you can change to pixels etc 
+)
+draw(prop_heat)
+dev.off()
+
+jacc_index <- Heatmap(jacc_iter, cluster_rows = T, cluster_columns = F, 
+        col = hcl.colors(100,"gnbu",rev=F), show_heatmap_legend = F,
+        row_names_side = "right", column_names_rot = 45, row_km = 3,
+        row_dend_width = unit(5, "cm"), column_names_side = c("bottom"),
+        #column_title = "Jaccard Similarity Index\n",
+        show_row_dend = TRUE, show_parent_dend_line = F, row_title = " ",
+        width = ncol(out_df)*unit(3, "cm"), 
+        height = nrow(out_df)*unit(1.5, "cm"),
+        #row_order = c(7,6,5,4,3,2,1),
+        row_names_gp = gpar(fontsize=16),
+        column_names_gp = gpar(fontsize=16),
+        border = T, column_title_gp = gpar(fontface="bold", fontsize=18),
+        cell_fun = function(j, i, x, y, width, height, fill){
+        grid.text(sprintf("%.2f", jacc_iter[i, j]), x, y, gp = gpar(fontsize = 13))}, 
+        rect_gp = gpar(col = "black", lwd = 1))
+
+Cairo::Cairo(
+  32, #length
+  13, #width
+  file = "/data/projects/circ_paper_results/plots/real_jacc_index.png",
+  type = "png", #tiff
+  bg = "white", #white or transparent depending on your requirement 
+  dpi = 300,
+  units = "cm" #you can change to pixels etc 
+)
+draw(jacc_index)
+dev.off()
+```
+
+# venn ot go beside it.. 
+```{r, warnings=F, message=F}
+venn_list <- list(CIRCexplorer2=CE_union,
+                  circRNA_finder=CF_union,
+                  CIRIquant=CI_union,
+                  DCC=DC_union,
+                  find_circ=FC_union,
+                  MapSplice=MS_union,
+                  Segemehl=SG_union)
+
+# try nameless because venn:venn is horrific function
+venn_list <- list(CE_union,
+                  CF_union,
+                  CI_union,
+                  DC_union,
+                  FC_union,
+                  MS_union,
+                  SG_union)
+
+
+venn <- venn::venn(venn_list, ilcs = 1.25, snames = "a,b,c,d,e,f,g", zcolor = hcl.colors(7, palette = "gnbu"), plotsize = 700, box = FALSE)
+
+library(venn)
+library(ggplot2)
+library(ggpolypath)
+Cairo::Cairo(
+  27, #length
+  27, #width
+  file = "/data/projects/circ_paper_results/plots/venn.png",
+  type = "png", #tiff
+  bg = "white", #white or transparent depending on your requirement 
+  dpi = 300,
+  units = "cm" #you can change to pixels etc 
+)
+venn::venn(venn_list, ilcs = 1.25, snames = "a,b,c,d,e,f,g", zcolor = hcl.colors(7, palette = "gnbu"), plotsize = 700, box = FALSE)
+dev.off()
+
+
+venn:venn(venn_list, box=F, ilcs = 1.5, plotsize = 300, sncs = 0.1, ggplot = T)
+```
+
+# add a barplot to the jacc heatmap for lab meeting
+
+```{R}
+bar_df <- data.frame(c(length(NF_1), length(NF_2), length(NF_3), length(NF_4), length(NF_5), length(NF_6), length(NF_7)))
+bar_df <- t(bar_df)
+colnames(bar_df) <- colnames(jacc_iter)
+
+bar_col <- hcl.colors(3, "gnbu")
+
+
+col_ha <- HeatmapAnnotation(global_set = anno_barplot(bar_df[1,], height = unit(5, "cm")), col = list(foo = col_fun))
+
+jacc_index <- Heatmap(jacc_iter, cluster_rows = T, cluster_columns = F, 
+        col = hcl.colors(100,"gnbu",rev=F), show_heatmap_legend = F,
+        row_names_side = "right", column_names_rot = 45, row_km = 3,
+        row_dend_width = unit(5, "cm"), column_names_side = c("bottom"),
+        #column_title = "Jaccard Similarity Index\n",
+        show_row_dend = TRUE, show_parent_dend_line = F, row_title = " ",
+        width = ncol(out_df)*unit(3, "cm"), 
+        height = nrow(out_df)*unit(1.5, "cm"),
+        #row_order = c(7,6,5,4,3,2,1),
+        row_names_gp = gpar(fontsize=16),
+        column_names_gp = gpar(fontsize=16),
+        border = T, column_title_gp = gpar(fontface="bold", fontsize=18),
+        cell_fun = function(j, i, x, y, width, height, fill){
+        grid.text(sprintf("%.2f", jacc_iter[i, j]), x, y, gp = gpar(fontsize = 13))}, 
+        rect_gp = gpar(col = "black", lwd = 1), top_annotation = col_ha)
+
+draw(jacc_index)
 ```
