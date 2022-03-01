@@ -29,6 +29,11 @@ chmod 777 ./genePredToGtf
 
 cut -f2-11 hg19.txt | ./genePredToGtf file stdin hg19.gtf
 
+# sort to match fasta file chr10, chr11, chr12 etc etc..
+sort -k1 -n hg19.gtf > tmp.gtf && rm hg19.gtf && mv tmp.gtf hg19.gtf
+sort -k3 -n hg19.txt > tmp.txt && rm hg19.txt && mv tmp.txt hg19.txt
+
+
 mkdir -p ucsc 
 
 wget https://hgdownload.soe.ucsc.edu/goldenPath/hg19/bigZips/hg19.fa.gz && gunzip hg19.fa.gz
