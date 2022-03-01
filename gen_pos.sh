@@ -37,7 +37,9 @@ awk '/^>/ {F=substr($0, 2, length($0))".fa"; print >F;next;} {print >> F;}' < hg
 
 sleep 5
 
-while read -r line; do rm ucsc/${line}.fa; done < non_canon_chrs.txt
+rm ucsc/hg19.fa
+
+while read -r line; do rm -f ucsc/${line}.fa; done < non_canon_chrs.txt
 
 cat ucsc/*.fa > ucsc/hg19.fa
 
