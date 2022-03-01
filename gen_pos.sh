@@ -35,6 +35,10 @@ awk '/^>/ {F=substr($0, 2, length($0))".fa"; print >F;next;} {print >> F;}' < hg
 
 while read -r line; do rm ucsc/${line}.fa; done < non_canon_chrs.txt
 
+cat ucsc/*.fa > ucsc/hg19.fa
+
+mv hg19* ucsc/
+
 ## 4. Generate Sim reads 
 
 mkdir -p reads
@@ -48,3 +52,7 @@ gzip reads/oligo_1.fastq reads/oligo_2.fastq
 
 perl ./CIRIsimulator.pl -1 reads/leuk_1.fastq -2 reads/leuk_2.fastq -O logs/leuk_circRNA.list -G ./hg19.gtf -DB truth_sets/leukemia.txt -C 10 -LC 0 -R 1 -LR 1 -L 101 -E 1 -I 350 -D ./ucsc -CHR1 0 -M 50 2>&1 | tee logs/leuk.out && \
 gzip reads/leuk_1.fastq reads/leuk_2.fastq
+
+## 5. Run Workflow
+
+nextflow -bg run -r dev nf-core/circrna -profile singularity,lugh --input "reads/*_{1,2}.fastq.gz" --input_type "fastq" --module "circrna_discovery" --tool "circexplorer2, ciriquant, circrna_finder, dcc, find_circ, mapsplice, segemehl" --bsj_reads 0 --tool_filter 0 --outdir "simulated_analysis" --fasta "ucsc/hg19.fa" --gtf "ucsc/hg19.gtf" --circexplorer2_annotation "ucsc/hg19.txt" --max_cpus 16 --max_memory '100.GB'
