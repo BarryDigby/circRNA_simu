@@ -23,7 +23,9 @@ wget https://hgdownload.soe.ucsc.edu/goldenPath/hg19/database/refGene.txt.gz && 
 
 grep -vf non_canon_chrs.txt hg19.txt > tmp.txt && rm hg19.txt && mv tmp.txt hg19.txt
 
-wget wget http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/genePredToGtf && chmod +x genePredToGtf
+wget http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/genePredToGtf
+
+chmod 777 ./genePredToGtf
 
 cut -f2-11 hg19.txt | ./genePredToGtf file stdin hg19.gtf
 
@@ -32,6 +34,8 @@ mkdir -p ucsc
 wget https://hgdownload.soe.ucsc.edu/goldenPath/hg19/bigZips/hg19.fa.gz && gunzip hg19.fa.gz
 
 awk '/^>/ {F=substr($0, 2, length($0))".fa"; print >F;next;} {print >> F;}' < hg19.fa && mv *.fa ucsc/
+
+sleep 5
 
 while read -r line; do rm ucsc/${line}.fa; done < non_canon_chrs.txt
 
