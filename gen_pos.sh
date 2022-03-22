@@ -2,6 +2,7 @@
 
 ## Generate simulated circRNA reads based on Glioblastoma, Oligodendroma, Leukemia circRNAs from circRNADb
 ## Barry Digby 
+## note on non-canon chrs - there are none in the truth set, so have been omitted from the available set of chrs. 
 
 ## 1. Download circRNADb database file.
 
@@ -12,10 +13,6 @@ wget http://reprod.njmu.edu.cn/circrnadb/doc/circRNA_dataset.zip && unzip circRN
 mkdir -p truth_sets
 
 grep "glioblastoma" circRNA_dataset/circRNA_dataset.txt | awk -v OFS="\t" '{print $2, $3, $4, 0, 0, 0, $9, 0, 0, 0, $8}' | sort > truth_sets/glioblastoma.txt
-
-grep "oligodendroma" circRNA_dataset/circRNA_dataset.txt | awk -v OFS="\t" '{print $2, $3, $4, 0, 0, 0, $9, 0, 0, 0, $8}' | sort > truth_sets/oligodendroma.txt
-
-grep "leukemia" circRNA_dataset/circRNA_dataset.txt | awk -v OFS="\t" '{print $2, $3, $4, 0, 0, 0, $9, 0, 0, 0, $8}' | sort > truth_sets/leukemia.txt
 
 ## 3. Prep ucsc files
 
@@ -32,7 +29,6 @@ cut -f2-11 hg19.txt | ./genePredToGtf file stdin hg19.gtf
 # sort to match fasta file chr10, chr11, chr12 etc etc..
 sort -k1 -n hg19.gtf > tmp.gtf && rm hg19.gtf && mv tmp.gtf hg19.gtf
 sort -k3 -n hg19.txt > tmp.txt && rm hg19.txt && mv tmp.txt hg19.txt
-
 
 mkdir -p ucsc 
 
@@ -64,9 +60,6 @@ gzip reads/leuk_1.fastq reads/leuk_2.fastq
 
 ## 5. Run Workflow
 
-nextflow -bg run -r dev nf-core/circrna -profile singularity,lugh --input "reads/*_{1,2}.fastq.gz" --input_type "fastq" --module "circrna_discovery" --tool "circexplorer2, ciriquant, circrna_finder, dcc, find_circ, mapsplice, segemehl" --bsj_reads 0 --tool_filter 0 --outdir "simulated_analysis" --fasta "ucsc/hg19.fa" --gtf "hg19.gtf" --circexplorer2_annotation "hg19.txt" --max_cpus 4 --max_memory '70.GB'
+## nextflow pull nf-core/circrna
 
-## note: you will have to extract each cancer type from the results and check against the truth sets (i.e dont count a circRNA exclusive to glioblastoma as a missed call for the other 2). 
-## Generate coordinates from the truth sets and use these as members of a set for analysis in R. 
-
-## Save yourself the computational cost and apply BSJ filtering manually.
+## nextflow -bg run -r dev nf-core/circrna -profile singularity,lugh --input "reads/*_{1,2}.fastq.gz" --input_type "fastq" --module "circrna_discovery" --tool "circexplorer2, ciriquant, circrna_finder, dcc, find_circ, mapsplice, segemehl" --bsj_reads 2 --tool_filter 2 --outdir "simulated_analysis" --fasta "ucsc/hg19.fa" --gtf "hg19.gtf" --circexplorer2_annotation "hg19.txt" --max_cpus 4 --max_memory '70.GB'
